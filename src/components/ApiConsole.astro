@@ -1,0 +1,50 @@
+---
+// Sidebar di-render statis (SSG) untuk first paint cepat; panel kanan di-hydrate oleh vanilla JS (tanpa framework).
+const { spec } = Astro.props;
+const METHODS = ['get', 'post', 'put', 'patch', 'delete'];
+const groups = {};
+for (const [path, item] of Object.entries(spec.paths ?? {}))
+  for (const m of METHODS) {
+    const o = item[m];
+    if (!o) continue;
+    const tag = o.tags?.[0] ?? 'Other';
+    const id = o.operationId ?? `${m}${path}`.replace(/\W+/g, '_');
+    (groups[tag] ??= []).push({ id, m, path });
+  }
+---
+<div class="grid min-h-screen grid-cols-1 lg:h-screen lg:grid-cols-[272px_1fr]">
+  <aside class="border-b border-zinc-800 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:border-b-0 lg:border-r">
+    <div class="space-y-3 border-b border-zinc-800 p-4">
+      <div class="flex items-baseline justify-between">
+        <h1 id="title" class="text-sm font-semibold">{spec.info.title}</h1>
+        <span id="version" class="text-zinc-600">v{spec.info.version}</span>
+      </div>
+      <form id="spec-form" class="flex gap-2">
+        <input id="spec-url" class="field" placeholder="/openapi.json atau https://…" aria-label="URL spesifikasi OpenAPI" />
+        <button class="btn" type="submit">load</button>
+      </form>
+      <p id="spec-status" class="min-h-[1.2em] text-zinc-600"></p>
+    </div>
+    <nav id="nav" class="py-3" aria-label="Endpoints">
+      {Object.entries(groups).map(([tag, items]) => (
+        <section class="mb-3">
+          <h2 class="px-4 pb-1 text-zinc-600">{tag}</h2>
+          {items.map((o) => (
+            <a class="nav-link" href={`#${o.id}`} data-id={o.id}>
+              <span class={`verb v-${o.m}`}>{o.m.toUpperCase()}</span>
+              <span class="truncate">{o.path}</span>
+            </a>
+          ))}
+        </section>
+      ))}
+    </nav>
+  </aside>
+  <main id="detail" class="min-w-0 lg:h-screen lg:overflow-y-auto">
+    <p class="p-6 text-zinc-600">pilih endpoint di sidebar<span class="animate-blink text-accent">_</span></p>
+  </main>
+</div>
+
+<script type="application/json" id="spec-data" set:html={JSON.stringify(spec)} />
+<script>
+  import '../scripts/console.js';
+</script>

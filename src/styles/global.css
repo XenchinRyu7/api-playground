@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { background: #09090b; color: #f4f4f5; font-family: 'JetBrains Mono Variable', ui-monospace, monospace; font-size: 13px; line-height: 1.55; scrollbar-color: #27272a transparent; }
+  ::selection { background: #22d3ee33; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #27272a; transition: background .2s; }
+  ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+  :focus-visible { outline: 1px solid #67e8f9; outline-offset: 2px; }
+}
+
+@layer components {
+  .field { @apply w-full border border-zinc-800 bg-transparent px-2 py-1.5 text-zinc-100 outline-none transition-colors duration-150 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-accent; }
+  .field.invalid { @apply border-red-400/70; }
+  .btn { @apply relative overflow-hidden border border-zinc-700 px-3 py-1.5 text-zinc-300 transition-colors duration-150 hover:border-zinc-500 hover:text-zinc-50 active:translate-y-px; }
+  .btn-primary { @apply border-accent/60 text-accent hover:bg-accent hover:text-ink; }
+  .btn.ok { @apply border-accent-ok text-accent-ok; }
+  .label { @apply mb-2 flex items-center justify-between text-zinc-500; }
+  .tab { @apply border-b border-transparent px-1 pb-1 text-zinc-500 transition-colors hover:text-zinc-200; }
+  .tab[aria-selected='true'] { @apply border-accent text-accent; }
+  .verb { @apply inline-block min-w-[3.4em] px-1.5 text-center text-[10px] font-semibold leading-[18px] tracking-wide; background: color-mix(in srgb, currentColor 10%, transparent); transition: background .15s; }
+  .v-get { color: #6ee7b7; } .v-post { color: #67e8f9; } .v-put, .v-patch { color: #fcd34d; } .v-delete { color: #fda4af; }
+  .nav-link { @apply flex items-center gap-2 border-l border-transparent px-4 py-1.5 text-zinc-400 transition-[background,color,border-color,padding] duration-150 hover:bg-zinc-900 hover:pl-5 hover:text-zinc-100; }
+  .nav-link[aria-current='true'] { @apply border-accent bg-zinc-900 pl-5 text-zinc-50; }
+  .nav-link:hover .verb { background: color-mix(in srgb, currentColor 20%, transparent); }
+  .tok-k { color: #67e8f9; } .tok-s { color: #6ee7b7; } .tok-n { color: #fcd34d; } .tok-b { color: #c4b5fd; }
+}
+
+.ln { display: block; animation: line .18s ease-out both; animation-delay: calc(min(var(--i), 40) * 9ms); }
+@media (prefers-reduced-motion: reduce) { *, ::before, ::after { animation: none !important; transition: none !important; } }

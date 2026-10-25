@@ -1,0 +1,11 @@
+---
+import { readFile } from 'node:fs/promises';
+import Layout from '../layouts/Layout.astro';
+import ApiConsole from '../components/ApiConsole.astro';
+
+// Spec lokal dibaca saat build (SSG). URL eksternal bisa dimuat runtime lewat input / ?spec=
+const spec = JSON.parse(await readFile('./public/openapi.json', 'utf-8'));
+---
+<Layout title={`${spec.info.title} · API Playground`}>
+  <ApiConsole spec={spec} />
+</Layout>

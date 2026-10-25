@@ -1,0 +1,22 @@
+# dependencies & build
+node_modules/
+dist/
+.astro/
+.vercel/
+.output/
+
+# local data & secrets
+.data/
+.env
+.env.*
+!.env.example
+
+# private docs (roadmap, notes)
+docs/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
