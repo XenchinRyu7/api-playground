@@ -6,7 +6,23 @@ import type { Project, ProjectMeta } from './types';
 //  - Lokal tanpa BLOB_READ_WRITE_TOKEN: file JSON di ./.data/
 
 export const env = (k: string): string | undefined => (globalThis as any).process?.env?.[k] ?? (import.meta.env as any)[k];
-const useBlob = () => !!env('BLOB_READ_WRITE_TOKEN');
+
+/** Cari token Vercel Blob secara fleksibel (BLOB_READ_WRITE_TOKEN atau prefix kustom dari Vercel) */
+export function getBlobToken(): string | undefined {
+  const direct = env('BLOB_READ_WRITE_TOKEN');
+  if (direct) return direct;
+
+  const envs: Record<string, string> = { ...((globalThis as any).process?.env || {}), ...(import.meta.env || {}) };
+  for (const [k, v] of Object.entries(envs)) {
+    if (typeof v === 'string') {
+      if (v.startsWith('vercel_blob_rw_')) return v;
+      if (k.endsWith('_READ_WRITE_TOKEN') || k.includes('BLOB_READ_WRITE')) return v;
+    }
+  }
+  return undefined;
+}
+
+const useBlob = () => !!getBlobToken();
 export const storageKind = () => (useBlob() ? 'Vercel Blob' : 'File lokal (.data/)');
 
 const META_KEYS: (keyof ProjectMeta)[] = ['slug', 'name', 'tagline', 'description', 'tags', 'color', 'icon', 'published', 'featured', 'order', 'source', 'endpointCount', 'createdAt', 'updatedAt'];
@@ -19,11 +35,12 @@ const sortMeta = (a: ProjectMeta, b: ProjectMeta) =>
 async function blob() { return import('@vercel/blob'); }
 
 async function listAll(prefix: string) {
+  const token = getBlobToken();
   const { list } = await blob();
   const out: { url: string; pathname: string; uploadedAt: Date }[] = [];
   let cursor: string | undefined;
   do {
-    const r = await list({ prefix, cursor, limit: 1000 });
+    const r = await list({ prefix, cursor, limit: 1000, ...(token ? { token } : {}) });
     out.push(...r.blobs);
     cursor = r.hasMore ? r.cursor : undefined;
   } while (cursor);
@@ -46,18 +63,26 @@ const blobStore = {
     return xs.length ? fetchJson(latest(xs).url) : null;
   },
   async save(p: Project) {
+    const token = getBlobToken();
     const { put, del } = await blob();
-    const opts = { access: 'public' as const, addRandomSuffix: true, contentType: 'application/json', cacheControlMaxAge: 60 };
+    const opts = {
+      access: 'public' as const,
+      addRandomSuffix: true,
+      contentType: 'application/json',
+      cacheControlMaxAge: 60,
+      ...(token ? { token } : {}),
+    };
     const [old1, old2] = await Promise.all([listAll(`projects/${p.slug}/`), listAll(`meta/${p.slug}/`)]);
     await put(`projects/${p.slug}/data.json`, JSON.stringify(p), opts);
     await put(`meta/${p.slug}/meta.json`, JSON.stringify(toMeta(p)), opts);
     const stale = [...old1, ...old2].map((b) => b.url);
-    if (stale.length) await del(stale);
+    if (stale.length) await del(stale, ...(token ? [{ token }] : []));
   },
   async remove(slug: string) {
+    const token = getBlobToken();
     const { del } = await blob();
     const xs = [...(await listAll(`projects/${slug}/`)), ...(await listAll(`meta/${slug}/`))].map((b) => b.url);
-    if (xs.length) await del(xs);
+    if (xs.length) await del(xs, ...(token ? [{ token }] : []));
   },
 };
 
