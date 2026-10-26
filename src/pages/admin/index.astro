@@ -25,7 +25,7 @@ try {
 const currentStorage = storageKind();
 ---
 <Layout title="Dashboard · Admin API Playground" noindex>
-  <AdminHeader title="Dashboard" subtitle="Kelola portofolio API Anda" />
+  <AdminHeader title="Dashboard"  />
 
   <main class="mx-auto max-w-6xl px-6 py-8">
     <!-- Storage & Info Banner -->
@@ -51,18 +51,6 @@ const currentStorage = storageKind();
       <div class="mb-6 rounded-xl border border-bad/20 bg-bad/10 p-4 text-xs text-bad">
         <p class="font-semibold">Peringatan Penyimpanan:</p>
         <p class="mt-1">{storageErr}</p>
-      </div>
-    )}
-
-    {isDemoFallback && (
-      <div class="mb-6 rounded-xl border border-accent/20 bg-accent/5 p-4 text-xs text-muted flex items-start gap-3">
-        <div class="rounded-lg bg-accent/15 p-1 text-accent shrink-0">
-          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        </div>
-        <div>
-          <p class="font-medium text-accent">Menampilkan project contoh (demo)</p>
-          <p class="mt-0.5">Database/storage masih kosong. Klik tombol <strong>Upload File Postman / OpenAPI</strong> untuk menambahkan koleksi API Anda sendiri.</p>
-        </div>
       </div>
     )}
 
