@@ -37,7 +37,7 @@ async function blob() { return import('@vercel/blob'); }
 async function listAll(prefix: string) {
   const token = getBlobToken();
   const { list } = await blob();
-  const out: { url: string; pathname: string; uploadedAt: Date }[] = [];
+  const out: { url: string; downloadUrl?: string; pathname: string; uploadedAt: Date }[] = [];
   let cursor: string | undefined;
   do {
     const r = await list({ prefix, cursor, limit: 1000, ...(token ? { token } : {}) });
@@ -47,34 +47,59 @@ async function listAll(prefix: string) {
   return out;
 }
 
-const latest = <T extends { uploadedAt: Date }>(xs: T[]) => xs.sort((a, b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt))[0];
-const fetchJson = async (url: string) => { const r = await fetch(url, { cache: 'no-store' }); if (!r.ok) throw new Error(`Blob ${r.status}`); return r.json(); };
+const latest = <T extends { uploadedAt: Date; url: string; downloadUrl?: string }>(xs: T[]) =>
+  xs.sort((a, b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt))[0];
+
+const fetchJson = async (b: { url: string; downloadUrl?: string }) => {
+  const targetUrl = b.downloadUrl || b.url;
+  const token = getBlobToken();
+  const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+  const r = await fetch(targetUrl, { headers, cache: 'no-store' });
+  if (!r.ok) throw new Error(`Blob ${r.status}`);
+  return r.json();
+};
 
 const blobStore = {
   async list(): Promise<ProjectMeta[]> {
     const blobs = await listAll('meta/');
     const bySlug = new Map<string, typeof blobs>();
     for (const b of blobs) { const s = b.pathname.split('/')[1]; (bySlug.get(s) ?? bySlug.set(s, []).get(s)!).push(b); }
-    const metas = await Promise.all([...bySlug.values()].map((xs) => fetchJson(latest(xs).url).catch(() => null)));
+    const metas = await Promise.all([...bySlug.values()].map((xs) => fetchJson(latest(xs)).catch(() => null)));
     return metas.filter(Boolean);
   },
   async get(slug: string): Promise<Project | null> {
     const xs = await listAll(`projects/${slug}/`);
-    return xs.length ? fetchJson(latest(xs).url) : null;
+    return xs.length ? fetchJson(latest(xs)) : null;
   },
   async save(p: Project) {
     const token = getBlobToken();
     const { put, del } = await blob();
-    const opts = {
-      access: 'public' as const,
-      addRandomSuffix: true,
-      contentType: 'application/json',
-      cacheControlMaxAge: 60,
-      ...(token ? { token } : {}),
+
+    const tryPut = async (access: 'public' | 'private') => {
+      const opts = {
+        access,
+        addRandomSuffix: true,
+        contentType: 'application/json',
+        cacheControlMaxAge: 60,
+        ...(token ? { token } : {}),
+      };
+      await put(`projects/${p.slug}/data.json`, JSON.stringify(p), opts as any);
+      await put(`meta/${p.slug}/meta.json`, JSON.stringify(toMeta(p)), opts as any);
     };
+
     const [old1, old2] = await Promise.all([listAll(`projects/${p.slug}/`), listAll(`meta/${p.slug}/`)]);
-    await put(`projects/${p.slug}/data.json`, JSON.stringify(p), opts);
-    await put(`meta/${p.slug}/meta.json`, JSON.stringify(toMeta(p)), opts);
+
+    try {
+      await tryPut('public');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('private store') || msg.includes('private access')) {
+        await tryPut('private');
+      } else {
+        throw err;
+      }
+    }
+
     const stale = [...old1, ...old2].map((b) => b.url);
     if (stale.length) await del(stale, ...(token ? [{ token }] : []));
   },
