@@ -162,23 +162,33 @@ if (!project) {
   </main>
 </Layout>
 
-<script define:vars={{ project }}>
-  const form = document.getElementById('edit-form');
-  const saveBtn = document.getElementById('save-btn');
-  const deleteBtn = document.getElementById('delete-btn');
-  const exportBtn = document.getElementById('export-btn');
-  const reuploadBtn = document.getElementById('reupload-btn');
-  const reuploadInput = document.getElementById('reupload-input');
-  const reuploadStatus = document.getElementById('reupload-status');
+<!-- Project Data serialized for client TypeScript -->
+<script type="application/json" id="admin-project-data" set:html={JSON.stringify(project)} />
 
-  document.querySelectorAll('#palette-presets button').forEach((btn) => {
+<script>
+  import type { Project } from '../../lib/types';
+
+  const raw = document.getElementById('admin-project-data')?.textContent;
+  const project: Project | null = raw ? JSON.parse(raw) : null;
+
+  const form = document.getElementById('edit-form') as HTMLFormElement | null;
+  const saveBtn = document.getElementById('save-btn') as HTMLButtonElement | null;
+  const deleteBtn = document.getElementById('delete-btn') as HTMLButtonElement | null;
+  const exportBtn = document.getElementById('export-btn') as HTMLButtonElement | null;
+  const reuploadBtn = document.getElementById('reupload-btn') as HTMLButtonElement | null;
+  const reuploadInput = document.getElementById('reupload-input') as HTMLInputElement | null;
+  const reuploadStatus = document.getElementById('reupload-status') as HTMLElement | null;
+
+  document.querySelectorAll<HTMLButtonElement>('#palette-presets button').forEach((btn) => {
     btn.addEventListener('click', () => {
       const color = btn.dataset.color;
-      if (color) document.getElementById('color').value = color;
+      const colorInput = document.getElementById('color') as HTMLInputElement | null;
+      if (color && colorInput) colorInput.value = color;
     });
   });
 
   exportBtn?.addEventListener('click', () => {
+    if (!project) return;
     const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -189,7 +199,8 @@ if (!project) {
   });
 
   deleteBtn?.addEventListener('click', async () => {
-    const ok = await window.showConfirm({
+    if (!project) return;
+    const ok = await window.showConfirm?.({
       title: `Hapus Project "${project.name}"?`,
       message: `Project /${project.slug} dan seluruh endpoint di dalamnya akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.`,
       confirmText: 'Hapus Permanen',
@@ -210,10 +221,12 @@ if (!project) {
 
   reuploadBtn?.addEventListener('click', () => reuploadInput?.click());
   reuploadInput?.addEventListener('change', async () => {
-    if (!reuploadInput.files?.length) return;
+    if (!project || !reuploadInput?.files?.length) return;
     const file = reuploadInput.files[0];
-    reuploadStatus.className = 'mt-2 text-xs text-muted block';
-    reuploadStatus.textContent = `Memproses ${file.name}...`;
+    if (reuploadStatus) {
+      reuploadStatus.className = 'mt-2 text-xs text-muted block';
+      reuploadStatus.textContent = `Memproses ${file.name}...`;
+    }
 
     try {
       const text = await file.text();
@@ -240,24 +253,29 @@ if (!project) {
       });
       if (!res.ok) throw new Error('Gagal mengupdate koleksi.');
 
-      reuploadStatus.className = 'mt-2 text-xs text-ok block';
-      reuploadStatus.textContent = `Berhasil memperbarui ${data.result.endpointCount} endpoint. Memuat ulang...`;
+      if (reuploadStatus) {
+        reuploadStatus.className = 'mt-2 text-xs text-ok block';
+        reuploadStatus.textContent = `Berhasil memperbarui ${data.result.endpointCount} endpoint. Memuat ulang...`;
+      }
       window.toast?.success(`Koleksi berhasil diperbarui (${data.result.endpointCount} endpoint)`);
       setTimeout(() => window.location.reload(), 800);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Gagal memproses file.';
-      reuploadStatus.className = 'mt-2 text-xs text-bad block';
-      reuploadStatus.textContent = msg;
+      if (reuploadStatus) {
+        reuploadStatus.className = 'mt-2 text-xs text-bad block';
+        reuploadStatus.textContent = msg;
+      }
       window.toast?.error(msg);
     }
   });
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (!project || !saveBtn) return;
     saveBtn.disabled = true;
     saveBtn.textContent = 'Menyimpan...';
 
-    const tags = ((document.getElementById('tags') as HTMLInputElement)?.value || '')
+    const tags = ((document.getElementById('tags') as HTMLInputElement | null)?.value || '')
       .split(',')
       .map((t) => t.trim().toLowerCase())
       .filter(Boolean);
@@ -266,21 +284,21 @@ if (!project) {
     const vars: { key: string; value: string; enabled: boolean }[] = [];
     const rows = document.querySelectorAll('#vars-body tr');
     rows.forEach((r) => {
-      const key = (r.querySelector('[data-field="key"]') as HTMLInputElement)?.value?.trim();
-      const value = (r.querySelector('[data-field="value"]') as HTMLInputElement)?.value ?? '';
-      const enabled = (r.querySelector('[data-field="enabled"]') as HTMLInputElement)?.checked ?? true;
+      const key = (r.querySelector('[data-field="key"]') as HTMLInputElement | null)?.value?.trim();
+      const value = (r.querySelector('[data-field="value"]') as HTMLInputElement | null)?.value ?? '';
+      const enabled = (r.querySelector('[data-field="enabled"]') as HTMLInputElement | null)?.checked ?? true;
       if (key) vars.push({ key, value, enabled });
     });
 
     const updates = {
-      name: (document.getElementById('name') as HTMLInputElement)?.value || '',
-      tagline: (document.getElementById('tagline') as HTMLInputElement)?.value || '',
-      description: (document.getElementById('description') as HTMLTextAreaElement)?.value || '',
-      icon: (document.getElementById('icon') as HTMLSelectElement)?.value || 'code',
-      color: (document.getElementById('color') as HTMLInputElement)?.value || '#0A84FF',
+      name: (document.getElementById('name') as HTMLInputElement | null)?.value || '',
+      tagline: (document.getElementById('tagline') as HTMLInputElement | null)?.value || '',
+      description: (document.getElementById('description') as HTMLTextAreaElement | null)?.value || '',
+      icon: (document.getElementById('icon') as HTMLSelectElement | null)?.value || 'code',
+      color: (document.getElementById('color') as HTMLInputElement | null)?.value || '#0A84FF',
       tags,
-      published: (document.getElementById('published') as HTMLInputElement)?.checked ?? true,
-      featured: (document.getElementById('featured') as HTMLInputElement)?.checked ?? false,
+      published: (document.getElementById('published') as HTMLInputElement | null)?.checked ?? true,
+      featured: (document.getElementById('featured') as HTMLInputElement | null)?.checked ?? false,
       variables: vars,
     };
 
