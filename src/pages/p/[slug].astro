@@ -394,7 +394,7 @@ if (!project) {
     });
 
   const project =
-    (window as any).__PLAYGROUND_PROJECT__ ||
+    window.__PLAYGROUND_PROJECT__ ||
     JSON.parse(
       document.getElementById("project-raw-data")?.textContent || "{}",
     );

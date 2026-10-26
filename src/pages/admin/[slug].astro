@@ -189,7 +189,7 @@ if (!project) {
   });
 
   deleteBtn?.addEventListener('click', async () => {
-    const ok = await (window as any).showConfirm({
+    const ok = await window.showConfirm({
       title: `Hapus Project "${project.name}"?`,
       message: `Project /${project.slug} dan seluruh endpoint di dalamnya akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.`,
       confirmText: 'Hapus Permanen',
@@ -200,10 +200,11 @@ if (!project) {
     try {
       const res = await fetch(`/api/admin/projects/${project.slug}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Gagal menghapus project');
-      (window as any).toast?.success(`Project "${project.name}" berhasil dihapus`);
+      window.toast?.success(`Project "${project.name}" berhasil dihapus`);
       setTimeout(() => { window.location.href = '/admin'; }, 400);
-    } catch (err: any) {
-      (window as any).toast?.error(err.message || 'Gagal menghapus project');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Gagal menghapus project';
+      window.toast?.error(msg);
     }
   });
 
@@ -241,12 +242,13 @@ if (!project) {
 
       reuploadStatus.className = 'mt-2 text-xs text-ok block';
       reuploadStatus.textContent = `Berhasil memperbarui ${data.result.endpointCount} endpoint. Memuat ulang...`;
-      (window as any).toast?.success(`Koleksi berhasil diperbarui (${data.result.endpointCount} endpoint)`);
+      window.toast?.success(`Koleksi berhasil diperbarui (${data.result.endpointCount} endpoint)`);
       setTimeout(() => window.location.reload(), 800);
-    } catch (err: any) {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Gagal memproses file.';
       reuploadStatus.className = 'mt-2 text-xs text-bad block';
-      reuploadStatus.textContent = err.message;
-      (window as any).toast?.error(err.message || 'Gagal memproses file.');
+      reuploadStatus.textContent = msg;
+      window.toast?.error(msg);
     }
   });
 
@@ -291,14 +293,15 @@ if (!project) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Gagal menyimpan.');
 
-      (window as any).toast?.success('Perubahan project berhasil disimpan');
+      window.toast?.success('Perubahan project berhasil disimpan');
       saveBtn.textContent = 'Tersimpan';
       setTimeout(() => {
         saveBtn.disabled = false;
         saveBtn.textContent = 'Simpan Perubahan';
       }, 1500);
-    } catch (err: any) {
-      (window as any).toast?.error(err.message || 'Gagal menyimpan.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Gagal menyimpan.';
+      window.toast?.error(msg);
       saveBtn.disabled = false;
       saveBtn.textContent = 'Simpan Perubahan';
     }

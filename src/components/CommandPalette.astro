@@ -54,7 +54,7 @@
   function buildItems() {
     items = [];
     // Collect endpoints from playground project if present
-    const project = (window as any).__PLAYGROUND_PROJECT__;
+    const project = window.__PLAYGROUND_PROJECT__;
     if (project) {
       const walk = (list: any[], path = '') => {
         list.forEach((it) => {
@@ -83,12 +83,12 @@
       {
         type: 'action',
         name: 'Ganti Tema ke Dark',
-        action: () => (window as any).__theme?.set('dark'),
+        action: () => window.__theme?.set('dark'),
       },
       {
         type: 'action',
         name: 'Ganti Tema ke Light',
-        action: () => (window as any).__theme?.set('light'),
+        action: () => window.__theme?.set('light'),
       },
       {
         type: 'action',

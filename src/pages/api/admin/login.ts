@@ -26,8 +26,9 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
-  } catch (e: any) {
-    return new Response(JSON.stringify({ error: e.message || 'Gagal login.' }), {
+  } catch (e) {
+    const error = e instanceof Error ? e.message : 'Gagal login.';
+    return new Response(JSON.stringify({ error }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });

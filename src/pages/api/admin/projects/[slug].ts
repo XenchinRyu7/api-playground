@@ -37,8 +37,9 @@ export const PUT: APIRoute = async ({ params, request }) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
-  } catch (e: any) {
-    return new Response(JSON.stringify({ error: e.message || 'Gagal memperbarui project.' }), {
+  } catch (e) {
+    const error = e instanceof Error ? e.message : 'Gagal memperbarui project.';
+    return new Response(JSON.stringify({ error }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
@@ -55,8 +56,9 @@ export const DELETE: APIRoute = async ({ params }) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
-  } catch (e: any) {
-    return new Response(JSON.stringify({ error: e.message || 'Gagal menghapus project.' }), {
+  } catch (e) {
+    const error = e instanceof Error ? e.message : 'Gagal menghapus project.';
+    return new Response(JSON.stringify({ error }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });

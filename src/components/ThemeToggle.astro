@@ -16,10 +16,11 @@ const icons = {
   ))}
 </div>
 <script>
-  const sync = () => document.querySelectorAll<HTMLElement>('[data-theme-set]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.themeSet === (window as any).__theme.get())));
+  const sync = () => document.querySelectorAll<HTMLElement>('[data-theme-set]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.themeSet === window.__theme?.get())));
   document.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-theme-set]');
-    if (b) (window as any).__theme.set(b.dataset.themeSet);
+    const mode = b?.dataset.themeSet;
+    if (mode && window.__theme) window.__theme.set(mode);
   });
   addEventListener('themechange', sync);
   sync();

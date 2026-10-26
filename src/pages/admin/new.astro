@@ -131,7 +131,9 @@ import { AVAILABLE_DEV_ICONS } from '../../lib/icons';
 </Layout>
 
 <script>
-  let currentImport: any = null;
+  import type { ImportResult, Item } from '../../lib/types';
+
+  let currentImport: ImportResult | null = null;
 
   const dropZone = document.getElementById('drop-zone') as HTMLDivElement;
   const fileInput = document.getElementById('file-input') as HTMLInputElement;
@@ -176,7 +178,7 @@ import { AVAILABLE_DEV_ICONS } from '../../lib/icons';
 
   parsePasteBtn.addEventListener('click', () => {
     const text = pasteInput.value.trim();
-    if (!text) return (window as any).toast?.error('Paste konten JSON terlebih dahulu.');
+    if (!text) return window.toast?.error('Paste konten JSON terlebih dahulu.');
     processJsonString(text, 'Manual Paste');
   });
 
@@ -206,14 +208,15 @@ import { AVAILABLE_DEV_ICONS } from '../../lib/icons';
         return;
       }
 
-      currentImport = data.result;
+      currentImport = data.result as ImportResult;
       showPreview(currentImport);
-    } catch (err: any) {
-      statusBox.innerHTML = `<div class="rounded-lg bg-bad/10 p-3 text-xs text-bad border border-bad/20"><p class="font-semibold">[Error]</p><p class="mt-0.5">${err.message}</p></div>`;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Gagal memproses file.';
+      statusBox.innerHTML = `<div class="rounded-lg bg-bad/10 p-3 text-xs text-bad border border-bad/20"><p class="font-semibold">[Error]</p><p class="mt-0.5">${msg}</p></div>`;
     }
   }
 
-  function showPreview(result: any) {
+  function showPreview(result: ImportResult) {
     statusBox.innerHTML = `
       <div class="flex items-center gap-2 text-xs text-ok font-medium">
         <span class="rounded bg-ok/15 px-2 py-0.5 font-mono text-[10px] text-ok">SUCCESS</span>
@@ -233,7 +236,7 @@ import { AVAILABLE_DEV_ICONS } from '../../lib/icons';
     // Render endpoint items
     const epList = document.getElementById('endpoints-list') as HTMLDivElement;
     epList.innerHTML = '';
-    const walk = (items: any[]) => {
+    const walk = (items: Item[]) => {
       items.forEach((it) => {
         if (it.kind === 'folder') {
           const div = document.createElement('div');
@@ -300,12 +303,16 @@ import { AVAILABLE_DEV_ICONS } from '../../lib/icons';
         body: JSON.stringify(payload),
       });
 
-      (window as any).toast?.success('Project berhasil dibuat! Mengalihkan...');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal menyimpan.');
+
+      window.toast?.success('Project berhasil dibuat! Mengalihkan...');
       setTimeout(() => {
         window.location.href = `/p/${data.project.slug}`;
       }, 500);
-    } catch (err: any) {
-      (window as any).toast?.error(err.message || 'Gagal menyimpan.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Gagal menyimpan.';
+      window.toast?.error(msg);
       saveBtn.disabled = false;
       saveBtn.textContent = 'Simpan & Buat Project';
     }

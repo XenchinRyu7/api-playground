@@ -29,7 +29,7 @@ const { title = 'Admin Dashboard', subtitle = 'Kelola portofolio API' } = Astro.
 <script>
   const logoutBtn = document.getElementById('admin-logout-btn');
   logoutBtn?.addEventListener('click', async () => {
-    const ok = await (window as any).showConfirm({
+    const ok = await window.showConfirm({
       title: 'Keluar dari Admin?',
       message: 'Sesi admin Anda akan diakhiri.',
       confirmText: 'Keluar',
@@ -41,7 +41,7 @@ const { title = 'Admin Dashboard', subtitle = 'Kelola portofolio API' } = Astro.
       await fetch('/api/admin/logout', { method: 'POST' });
       window.location.href = '/admin/login';
     } catch {
-      (window as any).toast?.error('Gagal logout. Silakan coba lagi.');
+      window.toast?.error('Gagal logout. Silakan coba lagi.');
     }
   });
 </script>

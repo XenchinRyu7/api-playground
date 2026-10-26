@@ -90,10 +90,11 @@ const configured = adminConfigured();
       const params = new URLSearchParams(window.location.search);
       const next = params.get('next') || '/admin';
       window.location.href = next;
-    } catch (err: any) {
-      errorMsg.textContent = err.message;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Password salah.';
+      errorMsg.textContent = msg;
       errorMsg.classList.remove('hidden');
-      (window as any).toast?.error(err.message || 'Password salah.');
+      window.toast?.error(msg);
       pwInput.focus();
       pwInput.select();
     } finally {

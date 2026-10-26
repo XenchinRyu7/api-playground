@@ -29,13 +29,13 @@ const { project = null } = Astro.props;
   const toggleBtn = document.getElementById('term-toggle-btn') as HTMLElement;
   const container = document.getElementById('term-container') as HTMLElement;
 
-  let terminalInstance: any = null;
+  let terminalInstance: Terminal | null = null;
   let isOpen = false;
 
   function initTerm() {
     if (!terminalInstance) {
-      const projData = (window as any).__PLAYGROUND_PROJECT__ || null;
-      const vars = (window as any).__PLAYGROUND_VARS__ || {};
+      const projData = window.__PLAYGROUND_PROJECT__ || null;
+      const vars = window.__PLAYGROUND_VARS__ || {};
       terminalInstance = new Terminal(container, {
         project: projData,
         variables: vars,

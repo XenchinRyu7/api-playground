@@ -16,8 +16,9 @@ export const POST: APIRoute = async ({ request }) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
-  } catch (e: any) {
-    return new Response(JSON.stringify({ error: e.message || 'Gagal memproses file.' }), {
+  } catch (e) {
+    const error = e instanceof Error ? e.message : 'Gagal memproses file.';
+    return new Response(JSON.stringify({ error }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });

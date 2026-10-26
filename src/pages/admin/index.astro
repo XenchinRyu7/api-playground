@@ -10,8 +10,8 @@ let storageErr = '';
 
 try {
   projects = await listProjects({ includeDrafts: true });
-} catch (e: any) {
-  storageErr = e.message;
+} catch (e) {
+  storageErr = e instanceof Error ? e.message : 'Gagal mengakses storage';
 }
 
 const currentStorage = storageKind();
@@ -139,7 +139,7 @@ const currentStorage = storageKind();
       const name = btn.dataset.name;
       if (!slug) return;
 
-      const ok = await (window as any).showConfirm({
+      const ok = await window.showConfirm({
         title: `Hapus Project "${name}"?`,
         message: `Project /${slug} dan seluruh endpoint di dalamnya akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.`,
         confirmText: 'Hapus Permanen',
@@ -151,10 +151,11 @@ const currentStorage = storageKind();
         const res = await fetch(`/api/admin/projects/${slug}`, { method: 'DELETE' });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Gagal menghapus');
-        (window as any).toast?.success(`Project "${name}" berhasil dihapus`);
+        window.toast?.success(`Project "${name}" berhasil dihapus`);
         setTimeout(() => window.location.reload(), 400);
-      } catch (err: any) {
-        (window as any).toast?.error(err.message || 'Gagal menghapus project');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Gagal menghapus project';
+        window.toast?.error(msg);
       }
     });
   });
