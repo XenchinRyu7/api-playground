@@ -257,30 +257,30 @@ if (!project) {
     saveBtn.disabled = true;
     saveBtn.textContent = 'Menyimpan...';
 
-    const tags = (document.getElementById('tags').value || '')
+    const tags = ((document.getElementById('tags') as HTMLInputElement)?.value || '')
       .split(',')
       .map((t) => t.trim().toLowerCase())
       .filter(Boolean);
 
     // Read variables from table
-    const vars = [];
+    const vars: { key: string; value: string; enabled: boolean }[] = [];
     const rows = document.querySelectorAll('#vars-body tr');
     rows.forEach((r) => {
-      const key = r.querySelector('[data-field="key"]')?.value?.trim();
-      const value = r.querySelector('[data-field="value"]')?.value ?? '';
-      const enabled = r.querySelector('[data-field="enabled"]')?.checked ?? true;
+      const key = (r.querySelector('[data-field="key"]') as HTMLInputElement)?.value?.trim();
+      const value = (r.querySelector('[data-field="value"]') as HTMLInputElement)?.value ?? '';
+      const enabled = (r.querySelector('[data-field="enabled"]') as HTMLInputElement)?.checked ?? true;
       if (key) vars.push({ key, value, enabled });
     });
 
     const updates = {
-      name: document.getElementById('name').value,
-      tagline: document.getElementById('tagline').value,
-      description: document.getElementById('description').value,
-      icon: document.getElementById('icon').value || 'code',
-      color: document.getElementById('color').value || '#0A84FF',
+      name: (document.getElementById('name') as HTMLInputElement)?.value || '',
+      tagline: (document.getElementById('tagline') as HTMLInputElement)?.value || '',
+      description: (document.getElementById('description') as HTMLTextAreaElement)?.value || '',
+      icon: (document.getElementById('icon') as HTMLSelectElement)?.value || 'code',
+      color: (document.getElementById('color') as HTMLInputElement)?.value || '#0A84FF',
       tags,
-      published: document.getElementById('published').checked,
-      featured: document.getElementById('featured').checked,
+      published: (document.getElementById('published') as HTMLInputElement)?.checked ?? true,
+      featured: (document.getElementById('featured') as HTMLInputElement)?.checked ?? false,
       variables: vars,
     };
 
