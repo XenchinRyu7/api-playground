@@ -1,0 +1,202 @@
+---
+// NotificationCenter.astro: macOS & iOS style dynamic toast and modal dialog system
+---
+
+<!-- Global Toast Container (Top Center - Dynamic Island Style) -->
+<div
+  id="toast-container"
+  class="fixed top-4 inset-x-0 mx-auto z-[9999] flex flex-col items-center gap-2 pointer-events-none px-4"
+  aria-live="polite"
+></div>
+
+<!-- Global macOS Alert / Confirm Modal Dialog -->
+<div
+  id="sys-dialog-backdrop"
+  class="fixed inset-0 z-[9998] hidden items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity duration-200 opacity-0"
+>
+  <div
+    id="sys-dialog-card"
+    class="sheet w-full max-w-sm rounded-2xl p-6 shadow-window border border-line/15 text-center flex flex-col items-center transform scale-95 transition-all duration-200"
+    role="dialog"
+    aria-modal="true"
+  >
+    <!-- macOS Traffic Light Header -->
+    <div class="w-full flex items-center justify-between pb-3 mb-2 border-b border-line/10">
+      <div class="traffic flex items-center gap-1.5">
+        <i class="dot dot-red"></i>
+        <i class="dot dot-yellow"></i>
+        <i class="dot dot-green"></i>
+      </div>
+      <span class="text-[10px] font-mono uppercase tracking-wider text-muted/60" id="sys-dialog-tag">System</span>
+    </div>
+
+    <!-- Icon Badge -->
+    <div id="sys-dialog-icon" class="mx-auto my-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-line/5 text-fg">
+      <!-- Icon SVG injected dynamically -->
+    </div>
+
+    <!-- Title & Message -->
+    <h3 id="sys-dialog-title" class="text-sm font-bold text-fg tracking-tight mt-1"></h3>
+    <p id="sys-dialog-msg" class="text-xs leading-relaxed text-muted mt-2 max-w-xs break-words"></p>
+
+    <!-- Action Buttons -->
+    <div id="sys-dialog-actions" class="mt-6 flex w-full items-center gap-2.5">
+      <button
+        type="button"
+        id="sys-dialog-cancel"
+        class="btn btn-ghost flex-1 text-xs py-1.5"
+      >
+        Batal
+      </button>
+      <button
+        type="button"
+        id="sys-dialog-confirm"
+        class="btn btn-primary flex-1 text-xs py-1.5"
+      >
+        Lanjutkan
+      </button>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  (() => {
+    // ----------------------------------------------------
+    // TOAST NOTIFICATION
+    // ----------------------------------------------------
+    const toastContainer = document.getElementById('toast-container');
+
+    const ICONS = {
+      success: `<span class="grid h-5 w-5 place-items-center rounded-full bg-ok/15 text-ok"><svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg></span>`,
+      error: `<span class="grid h-5 w-5 place-items-center rounded-full bg-bad/15 text-bad"><svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></span>`,
+      info: `<span class="grid h-5 w-5 place-items-center rounded-full bg-accent/15 text-accent"><svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></span>`,
+    };
+
+    function showToast(message, type = 'info', duration = 3000) {
+      if (!toastContainer) return;
+
+      const toast = document.createElement('div');
+      toast.className = 'pointer-events-auto flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-surface/90 backdrop-blur-xl border border-line/15 shadow-window text-xs text-fg font-medium transition-all duration-300 transform -translate-y-3 opacity-0 cursor-pointer select-none';
+      
+      const iconHtml = ICONS[type] || ICONS.info;
+      toast.innerHTML = `${iconHtml}<span class="max-w-xs break-words">${message}</span>`;
+
+      toastContainer.appendChild(toast);
+
+      // Trigger enter animation
+      requestAnimationFrame(() => {
+        toast.classList.remove('-translate-y-3', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+      });
+
+      const dismiss = () => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('-translate-y-3', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      };
+
+      toast.addEventListener('click', dismiss);
+      const timer = setTimeout(dismiss, duration);
+      toast._timer = timer;
+    }
+
+    window.showToast = showToast;
+    window.toast = {
+      success: (msg, dur) => showToast(msg, 'success', dur),
+      error: (msg, dur) => showToast(msg, 'error', dur),
+      info: (msg, dur) => showToast(msg, 'info', dur),
+    };
+
+    // ----------------------------------------------------
+    // CONFIRM & ALERT MODAL (macOS Style)
+    // ----------------------------------------------------
+    const backdrop = document.getElementById('sys-dialog-backdrop');
+    const card = document.getElementById('sys-dialog-card');
+    const titleEl = document.getElementById('sys-dialog-title');
+    const msgEl = document.getElementById('sys-dialog-msg');
+    const iconEl = document.getElementById('sys-dialog-icon');
+    const cancelBtn = document.getElementById('sys-dialog-cancel');
+    const confirmBtn = document.getElementById('sys-dialog-confirm');
+
+    let currentResolver = null;
+
+    function openDialog({ title, message, confirmText = 'Lanjutkan', cancelText = 'Batal', danger = false, isAlert = false }) {
+      return new Promise((resolve) => {
+        currentResolver = resolve;
+
+        if (titleEl) titleEl.textContent = title || 'Konfirmasi';
+        if (msgEl) msgEl.textContent = message || '';
+
+        if (confirmBtn) {
+          confirmBtn.textContent = confirmText;
+          if (danger) {
+            confirmBtn.className = 'btn bg-bad text-white hover:bg-bad/90 border-transparent flex-1 text-xs py-1.5 shadow-sm';
+          } else {
+            confirmBtn.className = 'btn btn-primary flex-1 text-xs py-1.5';
+          }
+        }
+
+        if (cancelBtn) {
+          cancelBtn.textContent = cancelText;
+          cancelBtn.style.display = isAlert ? 'none' : 'block';
+        }
+
+        if (iconEl) {
+          if (danger) {
+            iconEl.innerHTML = `<span class="grid h-10 w-10 place-items-center rounded-xl bg-bad/15 text-bad"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg></span>`;
+          } else if (isAlert) {
+            iconEl.innerHTML = `<span class="grid h-10 w-10 place-items-center rounded-xl bg-accent/15 text-accent"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></span>`;
+          } else {
+            iconEl.innerHTML = `<span class="grid h-10 w-10 place-items-center rounded-xl bg-line/10 text-fg"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg></span>`;
+          }
+        }
+
+        if (backdrop) {
+          backdrop.classList.remove('hidden');
+          backdrop.classList.add('flex');
+          requestAnimationFrame(() => {
+            backdrop.classList.remove('opacity-0');
+            backdrop.classList.add('opacity-100');
+            card?.classList.remove('scale-95');
+            card?.classList.add('scale-100');
+          });
+        }
+
+        confirmBtn?.focus();
+      });
+    }
+
+    function closeDialog(result) {
+      if (backdrop) {
+        backdrop.classList.remove('opacity-100');
+        backdrop.classList.add('opacity-0');
+        card?.classList.remove('scale-100');
+        card?.classList.add('scale-95');
+        setTimeout(() => {
+          backdrop.classList.remove('flex');
+          backdrop.classList.add('hidden');
+        }, 200);
+      }
+      if (currentResolver) {
+        currentResolver(result);
+        currentResolver = null;
+      }
+    }
+
+    cancelBtn?.addEventListener('click', () => closeDialog(false));
+    confirmBtn?.addEventListener('click', () => closeDialog(true));
+
+    backdrop?.addEventListener('click', (e) => {
+      if (e.target === backdrop) closeDialog(false);
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (!backdrop || backdrop.classList.contains('hidden')) return;
+      if (e.key === 'Escape') closeDialog(false);
+      if (e.key === 'Enter') closeDialog(true);
+    });
+
+    window.showConfirm = (opts) => openDialog({ ...opts, isAlert: false });
+    window.showAlert = (message, title = 'Perhatian') => openDialog({ title, message, confirmText: 'OK', isAlert: true });
+  })();
+</script>

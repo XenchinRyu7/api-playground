@@ -189,13 +189,21 @@ if (!project) {
   });
 
   deleteBtn?.addEventListener('click', async () => {
-    if (!confirm(`Hapus permanen project "${project.name}"?`)) return;
+    const ok = await (window as any).showConfirm({
+      title: `Hapus Project "${project.name}"?`,
+      message: `Project /${project.slug} dan seluruh endpoint di dalamnya akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.`,
+      confirmText: 'Hapus Permanen',
+      danger: true,
+    });
+    if (!ok) return;
+
     try {
       const res = await fetch(`/api/admin/projects/${project.slug}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Gagal menghapus project');
-      window.location.href = '/admin';
-    } catch (err) {
-      alert(err.message);
+      (window as any).toast?.success(`Project "${project.name}" berhasil dihapus`);
+      setTimeout(() => { window.location.href = '/admin'; }, 400);
+    } catch (err: any) {
+      (window as any).toast?.error(err.message || 'Gagal menghapus project');
     }
   });
 
@@ -232,11 +240,13 @@ if (!project) {
       if (!res.ok) throw new Error('Gagal mengupdate koleksi.');
 
       reuploadStatus.className = 'mt-2 text-xs text-ok block';
-      reuploadStatus.textContent = `[SUCCESS] Berhasil memperbarui ${data.result.endpointCount} endpoint. Memuat ulang...`;
-      setTimeout(() => window.location.reload(), 1000);
-    } catch (err) {
+      reuploadStatus.textContent = `Berhasil memperbarui ${data.result.endpointCount} endpoint. Memuat ulang...`;
+      (window as any).toast?.success(`Koleksi berhasil diperbarui (${data.result.endpointCount} endpoint)`);
+      setTimeout(() => window.location.reload(), 800);
+    } catch (err: any) {
       reuploadStatus.className = 'mt-2 text-xs text-bad block';
-      reuploadStatus.textContent = `[ERROR] ${err.message}`;
+      reuploadStatus.textContent = err.message;
+      (window as any).toast?.error(err.message || 'Gagal memproses file.');
     }
   });
 
@@ -281,13 +291,14 @@ if (!project) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Gagal menyimpan.');
 
+      (window as any).toast?.success('Perubahan project berhasil disimpan');
       saveBtn.textContent = 'Tersimpan';
       setTimeout(() => {
         saveBtn.disabled = false;
         saveBtn.textContent = 'Simpan Perubahan';
       }, 1500);
-    } catch (err) {
-      alert(err.message);
+    } catch (err: any) {
+      (window as any).toast?.error(err.message || 'Gagal menyimpan.');
       saveBtn.disabled = false;
       saveBtn.textContent = 'Simpan Perubahan';
     }

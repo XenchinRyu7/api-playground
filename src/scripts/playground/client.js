@@ -675,12 +675,16 @@ export function initPlayground(project) {
   $('#copy-res-btn')?.addEventListener('click', () => {
     if (!lastResponse) return;
     navigator.clipboard.writeText(lastResponse.text);
-    showToast('Response tersalin ke clipboard!');
+    if (typeof showToast === 'function') {
+      showToast('Response tersalin ke clipboard!', 'success');
+    }
   });
 
   $('#copy-snip-btn')?.addEventListener('click', () => {
     navigator.clipboard.writeText(snippetViewer.textContent || '');
-    showToast('Code snippet tersalin ke clipboard!');
+    if (typeof showToast === 'function') {
+      showToast('Code snippet tersalin ke clipboard!', 'success');
+    }
   });
 
   // Environment Modal

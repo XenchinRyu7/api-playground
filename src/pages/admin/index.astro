@@ -139,15 +139,22 @@ const currentStorage = storageKind();
       const name = btn.dataset.name;
       if (!slug) return;
 
-      if (!confirm(`Hapus project "${name}" (${slug})? Tindakan ini tidak dapat dibatalkan.`)) return;
+      const ok = await (window as any).showConfirm({
+        title: `Hapus Project "${name}"?`,
+        message: `Project /${slug} dan seluruh endpoint di dalamnya akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.`,
+        confirmText: 'Hapus Permanen',
+        danger: true,
+      });
+      if (!ok) return;
 
       try {
         const res = await fetch(`/api/admin/projects/${slug}`, { method: 'DELETE' });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Gagal menghapus');
-        window.location.reload();
+        (window as any).toast?.success(`Project "${name}" berhasil dihapus`);
+        setTimeout(() => window.location.reload(), 400);
       } catch (err: any) {
-        alert(err.message);
+        (window as any).toast?.error(err.message || 'Gagal menghapus project');
       }
     });
   });

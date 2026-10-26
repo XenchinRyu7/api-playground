@@ -176,7 +176,7 @@ import { AVAILABLE_DEV_ICONS } from '../../lib/icons';
 
   parsePasteBtn.addEventListener('click', () => {
     const text = pasteInput.value.trim();
-    if (!text) return alert('Paste konten JSON terlebih dahulu.');
+    if (!text) return (window as any).toast?.error('Paste konten JSON terlebih dahulu.');
     processJsonString(text, 'Manual Paste');
   });
 
@@ -300,12 +300,12 @@ import { AVAILABLE_DEV_ICONS } from '../../lib/icons';
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Gagal menyimpan.');
-
-      window.location.href = `/p/${data.project.slug}`;
+      (window as any).toast?.success('Project berhasil dibuat! Mengalihkan...');
+      setTimeout(() => {
+        window.location.href = `/p/${data.project.slug}`;
+      }, 500);
     } catch (err: any) {
-      alert(err.message);
+      (window as any).toast?.error(err.message || 'Gagal menyimpan.');
       saveBtn.disabled = false;
       saveBtn.textContent = 'Simpan & Buat Project';
     }

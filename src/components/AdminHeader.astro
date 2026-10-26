@@ -29,12 +29,19 @@ const { title = 'Admin Dashboard', subtitle = 'Kelola portofolio API' } = Astro.
 <script>
   const logoutBtn = document.getElementById('admin-logout-btn');
   logoutBtn?.addEventListener('click', async () => {
-    if (!confirm('Yakin ingin keluar?')) return;
+    const ok = await (window as any).showConfirm({
+      title: 'Keluar dari Admin?',
+      message: 'Sesi admin Anda akan diakhiri.',
+      confirmText: 'Keluar',
+      danger: true,
+    });
+    if (!ok) return;
+
     try {
       await fetch('/api/admin/logout', { method: 'POST' });
       window.location.href = '/admin/login';
-    } catch (e) {
-      alert('Gagal logout');
+    } catch {
+      (window as any).toast?.error('Gagal logout. Silakan coba lagi.');
     }
   });
 </script>

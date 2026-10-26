@@ -20,8 +20,10 @@ const configured = adminConfigured();
 
     <div class="card w-full max-w-[380px] p-7 shadow-window transition-all">
       <!-- Traffic lights -->
-      <div class="traffic mb-5">
-        <i></i><i></i><i></i>
+      <div class="traffic flex items-center gap-1.5 mb-5">
+        <i class="dot dot-red"></i>
+        <i class="dot dot-yellow"></i>
+        <i class="dot dot-green"></i>
       </div>
 
       <!-- App Icon / Lock -->
@@ -91,6 +93,7 @@ const configured = adminConfigured();
     } catch (err: any) {
       errorMsg.textContent = err.message;
       errorMsg.classList.remove('hidden');
+      (window as any).toast?.error(err.message || 'Password salah.');
       pwInput.focus();
       pwInput.select();
     } finally {
