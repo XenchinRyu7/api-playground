@@ -24,7 +24,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url).href;
     <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0c0c0e" media="(prefers-color-scheme: dark)" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <!-- Terapkan tema sebelum paint supaya tidak ada flash -->
     <script is:inline>
       (() => {
         const mq = matchMedia('(prefers-color-scheme: dark)');

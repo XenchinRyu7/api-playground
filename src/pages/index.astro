@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import TerminalDrawer from '../components/TerminalDrawer.astro';
 import CommandPalette from '../components/CommandPalette.astro';
+import DevIcon from '../components/DevIcon.astro';
 import { publicProjects } from '../lib/data';
 import { SITE } from '../config';
 
@@ -17,10 +18,6 @@ const allTags = ['all', ...new Set(projects.flatMap((p) => p.tags || []))];
     <header class="glass sticky top-0 z-30 border-b border-line/10 px-6 py-3.5 select-none">
       <div class="mx-auto flex max-w-6xl items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="traffic hidden sm:flex">
-            <i></i><i></i><i></i>
-          </div>
-
           {SITE.mainSiteUrl && (
             <a href={SITE.mainSiteUrl} class="flex items-center gap-1.5 text-xs text-muted hover:text-fg font-medium transition">
               <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -28,10 +25,6 @@ const allTags = ['all', ...new Set(projects.flatMap((p) => p.tags || []))];
             </a>
           )}
 
-          <div class="flex items-center gap-2">
-            <span class="grid h-6 w-6 place-items-center rounded-lg bg-accent text-xs font-bold text-white shadow-sm"></span>
-            <span class="text-sm font-semibold tracking-tight text-fg">{SITE.name}</span>
-          </div>
         </div>
 
         <div class="flex items-center gap-2.5">
@@ -90,14 +83,6 @@ const allTags = ['all', ...new Set(projects.flatMap((p) => p.tags || []))];
           ))}
         </div>
       )}
-
-      {demo && (
-        <div class="mb-6 rounded-2xl border border-accent/20 bg-accent/5 p-4 text-xs text-muted">
-          <p class="font-semibold text-accent">ℹ️ Mode Demo Interaktif</p>
-          <p class="mt-0.5">Menampilkan project contoh. Pemilik dapat login ke <a href="/admin" class="underline text-accent">Admin Dashboard</a> untuk mengupload file koleksi Postman / OpenAPI milik sendiri.</p>
-        </div>
-      )}
-
       <!-- iOS-Style Projects Grid -->
       <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3" id="projects-grid">
         {projects.map((p) => (
@@ -110,8 +95,8 @@ const allTags = ['all', ...new Set(projects.flatMap((p) => p.tags || []))];
           >
             <div>
               <div class="flex items-start justify-between gap-3">
-                <div class="app-icon h-14 w-14 text-2xl transition-transform duration-200 group-hover:scale-105" style={`--c: ${p.color || '#0A84FF'}`}>
-                  {p.icon || '⚡️'}
+                <div class="app-icon h-14 w-14 transition-transform duration-200 group-hover:scale-105" style={`--c: ${p.color || '#0A84FF'}`}>
+                  <DevIcon name={p.icon} class="h-7 w-7 text-white" />
                 </div>
 
                 <div class="flex items-center gap-1.5">
@@ -182,7 +167,6 @@ const allTags = ['all', ...new Set(projects.flatMap((p) => p.tags || []))];
     <!-- Footer -->
     <footer class="border-t border-line/10 py-6 px-6 text-center text-xs text-muted select-none">
       <div class="mx-auto max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-3">
-        <span>{SITE.name} · Dibuat dengan Astro & Tailwind</span>
         <div class="flex items-center gap-4">
           <button type="button" class="hover:text-fg" id="footer-term-btn">Terminal (Ctrl+`)</button>
           <button type="button" class="hover:text-fg" id="footer-cmd-btn">Command Palette (⌘K)</button>

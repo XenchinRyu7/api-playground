@@ -124,7 +124,7 @@ export class Terminal {
     const time = new Date().toLocaleTimeString();
     this.echo(`
       <div class="mb-2 text-xs">
-        <span class="t-acc t-b"> macOS API Terminal Engine</span> <span class="t-dim">v1.2.0 [${time}]</span><br>
+        <span class="t-acc t-b">&gt;_ API Terminal Engine</span> <span class="t-dim">v1.2.0 [${time}]</span><br>
         <span class="t-mut">Ketik <span class="t-acc">help</span> untuk daftar perintah, atau gunakan <span class="t-acc">Tab</span> untuk autocomplete.</span>
       </div>
     `);
@@ -256,14 +256,11 @@ export class Terminal {
     const epCount = this.context.project?.endpointCount || 0;
     this.echo(`
       <div class="flex gap-4 my-2 text-xs">
-        <div class="text-accent font-mono select-none font-bold hidden sm:block">
-           .:'
-         __ :'__
-      .'\`__\`-'__\`\`.
-     :__________.-'
-     :_________:
-      :_________'-.
-       \`.__.-.__.'
+        <div class="text-accent font-mono select-none font-bold hidden sm:block text-[11px] leading-tight">
+   ___    ____   ____
+  / _ |  / __ \ /  _/
+ / __ | / /_/ /_/ /  
+/_/ |_|/ ____/___/   
         </div>
         <div class="space-y-0.5 font-mono">
           <div><span class="t-acc t-b">guest</span>@<span class="t-acc t-b">api-playground</span></div>
@@ -300,7 +297,7 @@ export class Terminal {
     const walk = (list, prefix = '') => {
       list.forEach((it) => {
         if (it.kind === 'folder') {
-          lines.push(`📁 <span class="t-acc font-semibold">${prefix}${it.name}/</span>`);
+          lines.push(`<span class="t-teal font-mono">[dir]</span> <span class="t-acc font-semibold">${prefix}${it.name}/</span>`);
           walk(it.items || [], `${prefix}  `);
         } else {
           lines.push(`  <span class="verb v-${it.method.toLowerCase()} text-[10px]">${it.method}</span> <span class="text-fg">${esc(it.name)}</span> <span class="t-dim">(${it.id})</span>`);

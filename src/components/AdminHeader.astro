@@ -13,7 +13,9 @@ const { title = 'Admin Dashboard', subtitle = 'Kelola portofolio API' } = Astro.
         <i></i><i></i><i></i>
       </div>
       <a href="/admin" class="flex items-center gap-2 font-medium tracking-tight hover:opacity-85">
-        <span class="grid h-6 w-6 place-items-center rounded-lg bg-accent text-xs font-bold text-white shadow-sm"></span>
+        <span class="grid h-6 w-6 place-items-center rounded-lg bg-accent text-white shadow-sm">
+          <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
+        </span>
         <span class="text-[14px] font-semibold">{title}</span>
         {subtitle && <span class="hidden text-xs text-muted md:inline">· {subtitle}</span>}
       </a>

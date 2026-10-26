@@ -24,7 +24,7 @@ export function buildProject(r: ImportResult, meta: Partial<Project> & { slug: s
     description: r.description,
     tags: [],
     color: PALETTE[Math.floor(Math.random() * PALETTE.length)],
-    icon: '⚡️',
+    icon: 'code',
     published: true,
     featured: false,
     order: 0,
@@ -42,7 +42,7 @@ export function buildProject(r: ImportResult, meta: Partial<Project> & { slug: s
 /** Project contoh — tampil di publik selama belum ada project yang dipublish. */
 export function demoProjects(): Project[] {
   return [
-    { ...buildProject(importOpenAPI(openapi), { slug: 'dummyjson', icon: '🛍️', color: '#FF9F0A', tags: ['rest', 'auth', 'e-commerce'], tagline: 'Mock REST API: auth JWT, user, produk.', featured: true }), demo: true },
-    { ...buildProject(importPostman(postman), { slug: 'jsonplaceholder', icon: '📝', color: '#0A84FF', tags: ['rest', 'crud', 'postman'], tagline: 'Fake REST API untuk CRUD posts, users, comments.' }), demo: true },
+    { ...buildProject(importOpenAPI(openapi), { slug: 'dummyjson', icon: 'cart', color: '#FF9F0A', tags: ['rest', 'auth', 'e-commerce'], tagline: 'Mock REST API: auth JWT, user, produk.', featured: true }), demo: true },
+    { ...buildProject(importPostman(postman), { slug: 'jsonplaceholder', icon: 'api', color: '#0A84FF', tags: ['rest', 'crud', 'postman'], tagline: 'Fake REST API untuk CRUD posts, users, comments.' }), demo: true },
   ];
 }

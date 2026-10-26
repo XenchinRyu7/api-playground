@@ -1,0 +1,12 @@
+---
+import { getDevIconSvg } from '../lib/icons';
+
+interface Props {
+  name?: string;
+  class?: string;
+}
+
+const { name = 'code', class: cls = 'h-5 w-5' } = Astro.props;
+const svg = getDevIconSvg(name, cls);
+---
+<Fragment set:html={svg} />

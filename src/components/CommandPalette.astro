@@ -136,8 +136,11 @@
         `;
       } else {
         el.innerHTML = `
-          <span class="font-medium">⚡️ ${it.name}</span>
-          <span class="text-[10.5px] opacity-60">Aksi</span>
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-accent text-[11px] font-bold">&gt;_</span>
+            <span class="font-medium">${it.name}</span>
+          </div>
+          <span class="text-[10.5px] opacity-60 font-mono">cmd</span>
         `;
       }
 

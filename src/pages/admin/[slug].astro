@@ -1,8 +1,10 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import AdminHeader from '../../components/AdminHeader.astro';
+import DevIcon from '../../components/DevIcon.astro';
 import { loadProject } from '../../lib/data';
 import { PALETTE } from '../../lib/util';
+import { AVAILABLE_DEV_ICONS } from '../../lib/icons';
 
 const { slug } = Astro.params;
 const project = await loadProject(slug || '', true);
@@ -18,8 +20,10 @@ if (!project) {
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <a href="/admin" class="text-xs text-muted hover:text-fg">← Kembali ke Dashboard</a>
-        <h1 class="mt-2 text-2xl font-bold tracking-tight text-fg flex items-center gap-2">
-          <span>{project.icon}</span>
+        <h1 class="mt-2 text-2xl font-bold tracking-tight text-fg flex items-center gap-2.5">
+          <div class="app-icon h-8 w-8 text-white shrink-0" style={`--c: ${project.color || '#0A84FF'}`}>
+            <DevIcon name={project.icon} class="h-4 w-4" />
+          </div>
           <span>{project.name}</span>
         </h1>
         <p class="mt-0.5 text-xs text-muted">Diperbarui: {new Date(project.updatedAt).toLocaleString('id-ID')}</p>
@@ -81,8 +85,12 @@ if (!project) {
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <label class="mb-1 block text-xs font-medium text-muted">Icon / Emoji</label>
-            <input type="text" id="icon" value={project.icon || '⚡️'} class="field text-center text-lg" maxlength="4" />
+            <label class="mb-1 block text-xs font-medium text-muted">Developer Icon</label>
+            <select id="icon" class="field text-xs">
+              {AVAILABLE_DEV_ICONS.map((ic) => (
+                <option value={ic.id} selected={ic.id === (project.icon || 'code')}>{ic.label}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label class="mb-1 block text-xs font-medium text-muted">Warna Tema</label>
@@ -224,11 +232,11 @@ if (!project) {
       if (!res.ok) throw new Error('Gagal mengupdate koleksi.');
 
       reuploadStatus.className = 'mt-2 text-xs text-ok block';
-      reuploadStatus.textContent = `✓ Berhasil memperbarui ${data.result.endpointCount} endpoint! Memuat ulang...`;
+      reuploadStatus.textContent = `[SUCCESS] Berhasil memperbarui ${data.result.endpointCount} endpoint. Memuat ulang...`;
       setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
       reuploadStatus.className = 'mt-2 text-xs text-bad block';
-      reuploadStatus.textContent = `❌ ${err.message}`;
+      reuploadStatus.textContent = `[ERROR] ${err.message}`;
     }
   });
 
@@ -256,7 +264,7 @@ if (!project) {
       name: document.getElementById('name').value,
       tagline: document.getElementById('tagline').value,
       description: document.getElementById('description').value,
-      icon: document.getElementById('icon').value || '⚡️',
+      icon: document.getElementById('icon').value || 'code',
       color: document.getElementById('color').value || '#0A84FF',
       tags,
       published: document.getElementById('published').checked,
@@ -273,7 +281,7 @@ if (!project) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Gagal menyimpan.');
 
-      saveBtn.textContent = 'Tersimpan ✓';
+      saveBtn.textContent = 'Tersimpan';
       setTimeout(() => {
         saveBtn.disabled = false;
         saveBtn.textContent = 'Simpan Perubahan';

@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import AdminHeader from '../../components/AdminHeader.astro';
 import { PALETTE } from '../../lib/util';
+import { AVAILABLE_DEV_ICONS } from '../../lib/icons';
 ---
 <Layout title="Import API · Admin" noindex>
   <AdminHeader title="Import API" subtitle="Postman Collection atau OpenAPI" />
@@ -17,8 +18,8 @@ import { PALETTE } from '../../lib/util';
     <div class="card p-6 shadow-soft" id="drop-area">
       <div class="border-2 border-dashed border-line/20 rounded-xl p-8 text-center transition hover:border-accent hover:bg-accent/5 cursor-pointer" id="drop-zone">
         <input type="file" id="file-input" accept=".json,application/json" class="hidden" />
-        <div class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-surface shadow-soft text-2xl">
-          📂
+        <div class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-surface shadow-soft text-accent">
+          <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
         </div>
         <h3 class="mt-4 font-semibold text-fg">Drag & Drop file JSON di sini</h3>
         <p class="mt-1 text-xs text-muted">atau klik untuk memilih file dari komputer</p>
@@ -79,8 +80,12 @@ import { PALETTE } from '../../lib/util';
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <label class="mb-1 block text-xs font-medium text-muted">Emoji / Icon</label>
-            <input type="text" id="proj-icon" value="⚡️" class="field text-center text-lg" maxlength="4" />
+            <label class="mb-1 block text-xs font-medium text-muted">Developer Icon</label>
+            <select id="proj-icon" class="field text-xs">
+              {AVAILABLE_DEV_ICONS.map((ic) => (
+                <option value={ic.id} selected={ic.id === 'code'}>{ic.label}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label class="mb-1 block text-xs font-medium text-muted">Warna Tema</label>
@@ -197,22 +202,23 @@ import { PALETTE } from '../../lib/util';
       if (!res.ok) throw new Error(data.error || 'Gagal memproses file.');
 
       if (data.kind === 'environment') {
-        statusBox.innerHTML = `<p class="text-xs text-warn">⚠️ File yang diupload adalah <strong>Postman Environment</strong> (${data.variables.length} variabel). Silakan upload koleksi Postman Collection atau OpenAPI utama terlebih dahulu.</p>`;
+        statusBox.innerHTML = `<div class="rounded-lg bg-warn/10 p-3 text-xs text-warn border border-warn/20"><p class="font-semibold">[Notice] Postman Environment</p><p class="mt-0.5 text-muted">File ini berisi ${data.variables.length} variabel lingkungan. Silakan upload file Postman Collection atau OpenAPI utama terlebih dahulu.</p></div>`;
         return;
       }
 
       currentImport = data.result;
       showPreview(currentImport);
     } catch (err: any) {
-      statusBox.innerHTML = `<p class="text-xs text-bad">❌ ${err.message}</p>`;
+      statusBox.innerHTML = `<div class="rounded-lg bg-bad/10 p-3 text-xs text-bad border border-bad/20"><p class="font-semibold">[Error]</p><p class="mt-0.5">${err.message}</p></div>`;
     }
   }
 
   function showPreview(result: any) {
     statusBox.innerHTML = `
       <div class="flex items-center gap-2 text-xs text-ok font-medium">
-        <span>✓ Berhasil membaca koleksi</span>
-        <span class="text-muted">(${result.endpointCount} endpoint terdeteksi)</span>
+        <span class="rounded bg-ok/15 px-2 py-0.5 font-mono text-[10px] text-ok">SUCCESS</span>
+        <span>Berhasil membaca koleksi</span>
+        <span class="text-muted font-mono">(${result.endpointCount} endpoints)</span>
       </div>
       ${result.warnings?.length ? `<div class="mt-2 text-[11px] text-warn">${result.warnings.map((w: string) => `<div>• ${w}</div>`).join('')}</div>` : ''}
     `;
@@ -231,8 +237,8 @@ import { PALETTE } from '../../lib/util';
       items.forEach((it) => {
         if (it.kind === 'folder') {
           const div = document.createElement('div');
-          div.className = 'font-semibold text-muted text-[11px] mt-2 mb-1';
-          div.textContent = `📁 ${it.name}`;
+          div.className = 'font-semibold text-muted text-[11px] mt-2 mb-1 flex items-center gap-1.5';
+          div.innerHTML = `<svg class="h-3.5 w-3.5 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg> <span>${it.name}/</span>`;
           epList.appendChild(div);
           walk(it.items);
         } else {
@@ -279,7 +285,7 @@ import { PALETTE } from '../../lib/util';
         slug: (document.getElementById('proj-slug') as HTMLInputElement).value,
         tagline: (document.getElementById('proj-tagline') as HTMLInputElement).value,
         description: (document.getElementById('proj-desc') as HTMLTextAreaElement).value,
-        icon: (document.getElementById('proj-icon') as HTMLInputElement).value || '⚡️',
+        icon: (document.getElementById('proj-icon') as HTMLSelectElement).value || 'code',
         color: (document.getElementById('proj-color') as HTMLInputElement).value || '#0A84FF',
         tags,
         published: (document.getElementById('proj-published') as HTMLInputElement).checked,

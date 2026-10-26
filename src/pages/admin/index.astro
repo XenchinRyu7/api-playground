@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import AdminHeader from '../../components/AdminHeader.astro';
+import DevIcon from '../../components/DevIcon.astro';
 import { listProjects, storageKind } from '../../lib/store';
 import { demoProjects } from '../../lib/project';
 import { toMeta } from '../../lib/store';
@@ -54,9 +55,14 @@ const currentStorage = storageKind();
     )}
 
     {isDemoFallback && (
-      <div class="mb-6 rounded-xl border border-accent/20 bg-accent/5 p-4 text-xs text-muted">
-        <p class="font-medium text-accent">ℹ️ Menampilkan project contoh (demo)</p>
-        <p class="mt-0.5">Database/storage masih kosong. Klik tombol <strong>Upload File Postman / OpenAPI</strong> untuk menambahkan koleksi API Anda sendiri.</p>
+      <div class="mb-6 rounded-xl border border-accent/20 bg-accent/5 p-4 text-xs text-muted flex items-start gap-3">
+        <div class="rounded-lg bg-accent/15 p-1 text-accent shrink-0">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        </div>
+        <div>
+          <p class="font-medium text-accent">Menampilkan project contoh (demo)</p>
+          <p class="mt-0.5">Database/storage masih kosong. Klik tombol <strong>Upload File Postman / OpenAPI</strong> untuk menambahkan koleksi API Anda sendiri.</p>
+        </div>
       </div>
     )}
 
@@ -67,8 +73,8 @@ const currentStorage = storageKind();
           <div>
             <div class="flex items-start justify-between gap-3">
               <div class="flex items-center gap-3">
-                <div class="app-icon h-12 w-12 text-2xl" style={`--c: ${p.color || '#0A84FF'}`}>
-                  {p.icon || '⚡️'}
+                <div class="app-icon h-12 w-12" style={`--c: ${p.color || '#0A84FF'}`}>
+                  <DevIcon name={p.icon} class="h-6 w-6 text-white" />
                 </div>
                 <div>
                   <h3 class="font-semibold text-fg tracking-tight">{p.name}</h3>

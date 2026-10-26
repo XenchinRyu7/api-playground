@@ -3,6 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import ThemeToggle from '../../components/ThemeToggle.astro';
 import TerminalDrawer from '../../components/TerminalDrawer.astro';
 import CommandPalette from '../../components/CommandPalette.astro';
+import DevIcon from '../../components/DevIcon.astro';
 import { loadProject } from '../../lib/data';
 
 const { slug } = Astro.params;
@@ -31,8 +32,8 @@ if (!project) {
         <div class="h-4 w-px bg-line/10"></div>
 
         <div class="flex items-center gap-2">
-          <div class="app-icon h-7 w-7 text-sm" style={`--c: ${project.color || '#0A84FF'}`}>
-            {project.icon || '⚡️'}
+          <div class="app-icon h-7 w-7" style={`--c: ${project.color || '#0A84FF'}`}>
+            <DevIcon name={project.icon} class="h-4 w-4 text-white" />
           </div>
           <div>
             <span class="text-xs font-semibold text-fg tracking-tight">{project.name}</span>
