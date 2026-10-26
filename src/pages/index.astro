@@ -1,35 +1,50 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import ThemeToggle from '../components/ThemeToggle.astro';
-import TerminalDrawer from '../components/TerminalDrawer.astro';
-import CommandPalette from '../components/CommandPalette.astro';
-import DevIcon from '../components/DevIcon.astro';
-import { publicProjects } from '../lib/data';
-import { SITE } from '../config';
+import Layout from "../layouts/Layout.astro";
+import ThemeToggle from "../components/ThemeToggle.astro";
+import TerminalDrawer from "../components/TerminalDrawer.astro";
+import CommandPalette from "../components/CommandPalette.astro";
+import DevIcon from "../components/DevIcon.astro";
+import { publicProjects } from "../lib/data";
+import { SITE } from "../config";
 
-const { projects, demo } = await publicProjects();
+const { projects } = await publicProjects();
 
 // Collect all unique tags
-const allTags = ['all', ...new Set(projects.flatMap((p) => p.tags || []))];
+const allTags = ["all", ...new Set(projects.flatMap((p) => p.tags || []))];
 ---
-<Layout title={`${SITE.name} · API Showcase & Playground`} description={SITE.description}>
+
+<Layout
+  title={`${SITE.name} · API Showcase & Playground`}
+  description={SITE.description}
+>
   <div class="min-h-screen bg-bg flex flex-col">
     <!-- macOS Top Navbar -->
-    <header class="glass sticky top-0 z-30 border-b border-line/10 px-6 py-3.5 select-none">
+    <header
+      class="glass sticky top-0 z-30 border-b border-line/10 px-6 py-3.5 select-none"
+    >
       <div class="mx-auto flex max-w-6xl items-center justify-between">
         <div class="flex items-center gap-3">
-          {SITE.mainSiteUrl && (
-            <a
-              href={SITE.mainSiteUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="flex items-center gap-1.5 text-xs text-muted hover:text-fg font-medium transition group"
-            >
-              <span>{SITE.mainSiteLabel || 'Website Utama'}</span>
-              <svg class="h-3 w-3 opacity-60 group-hover:opacity-100 transition" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
-            </a>
-          )}
-
+          {
+            SITE.mainSiteUrl && (
+              <a
+                href={SITE.mainSiteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex items-center gap-1.5 text-xs text-muted hover:text-fg font-medium transition group"
+              >
+                <span>{SITE.mainSiteLabel || "Website Utama"}</span>
+                <svg
+                  class="h-3 w-3 opacity-60 group-hover:opacity-100 transition"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
+                </svg>
+              </a>
+            )
+          }
         </div>
 
         <div class="flex items-center gap-2.5">
@@ -44,10 +59,6 @@ const allTags = ['all', ...new Set(projects.flatMap((p) => p.tags || []))];
 
           <ThemeToggle />
 
-          <a href="/admin" class="btn btn-ghost px-2.5 py-1 text-xs" title="Halaman Admin">
-            <svg class="h-3.5 w-3.5 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-            <span class="hidden md:inline">Admin</span>
-          </a>
         </div>
       </div>
     </header>
@@ -55,121 +66,145 @@ const allTags = ['all', ...new Set(projects.flatMap((p) => p.tags || []))];
     <!-- Main Content -->
     <main class="mx-auto flex-1 max-w-6xl w-full px-6 py-8">
       <!-- Search & Tags Bar -->
-      <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div
+        class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      >
         <div>
-          <h1 class="text-2xl font-bold tracking-tight text-fg">API Playground & Showcase</h1>
-          <p class="mt-1 text-xs text-muted">Eksplorasi dokumentasi, uji coba endpoint secara interaktif, dan generate code snippets langsung dari browser.</p>
+          <h1 class="text-2xl font-bold tracking-tight text-fg">
+            API Playground & Showcase
+          </h1>
+          <p class="mt-1 text-xs text-muted">
+            Eksplorasi dokumentasi, uji coba endpoint secara interaktif, dan
+            generate code snippets langsung dari browser.
+          </p>
         </div>
 
-        <div class="relative w-full sm:w-72">
-          <svg class="absolute left-3 top-2.5 h-3.5 w-3.5 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-          <input
-            type="text"
-            id="proj-search-input"
-            placeholder="Cari project atau tag..."
-            class="field pl-8.5 py-1.5 text-xs"
-          />
-        </div>
+        {
+          projects.length > 0 && (
+            <div class="relative w-full sm:w-72">
+              <input
+                type="text"
+                id="proj-search-input"
+                placeholder="Cari project atau tag..."
+                class="field pl-8.5 py-1.5 text-xs"
+              />
+            </div>
+          )
+        }
       </div>
 
       <!-- Tag Filters -->
-      {allTags.length > 1 && (
-        <div class="mb-6 flex flex-wrap gap-1.5" id="tag-filters">
-          {allTags.map((tag) => (
-            <button
-              type="button"
-              class={`tag-btn rounded-full px-3 py-1 text-xs font-medium transition ${
-                tag === 'all' ? 'bg-fg text-bg' : 'bg-line/5 text-muted hover:text-fg hover:bg-line/10'
-              }`}
-              data-tag={tag}
-            >
-              {tag === 'all' ? 'Semua' : `#${tag}`}
-            </button>
-          ))}
-        </div>
-      )}
-      <!-- iOS-Style Projects Grid -->
-      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3" id="projects-grid">
-        {projects.map((p) => (
-          <a
-            href={`/p/${p.slug}`}
-            class="card project-card group relative flex flex-col justify-between p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-lift"
-            data-name={p.name.toLowerCase()}
-            data-tags={(p.tags || []).join(',').toLowerCase()}
-            data-desc={(p.tagline || p.description || '').toLowerCase()}
+      {
+        allTags.length > 1 && (
+          <div class="mb-6 flex flex-wrap gap-1.5" id="tag-filters">
+            {allTags.map((tag) => (
+              <button
+                type="button"
+                class={`tag-btn rounded-full px-3 py-1 text-xs font-medium transition ${
+                  tag === "all"
+                    ? "bg-fg text-bg"
+                    : "bg-line/5 text-muted hover:text-fg hover:bg-line/10"
+                }`}
+                data-tag={tag}
+              >
+                {tag === "all" ? "Semua" : `#${tag}`}
+              </button>
+            ))}
+          </div>
+        )
+      }
+
+      <!-- Projects Grid or Empty State -->
+      {
+        projects.length === 0 ? (
+          <div class="my-16 rounded-2xl border border-dashed border-line/20 bg-surface/30 p-12 text-center max-w-lg mx-auto">
+            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-line/5 text-muted mb-4">
+              <DevIcon name="terminal" class="h-7 w-7 text-muted" />
+            </div>
+            <h2 class="text-base font-bold tracking-tight text-fg">
+              Belum Ada Koleksi API
+            </h2>
+            <p class="mt-2 text-xs leading-relaxed text-muted">
+              Project API belum ditambahkan. Masuk ke panel admin untuk mengunggah file spesifikasi Postman atau OpenAPI Anda.
+            </p>
+            <div class="mt-6 flex items-center justify-center gap-3">
+              <a href="/admin" class="btn btn-primary text-xs">
+                <span>Buka Panel Admin</span>
+                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+              </a>
+            </div>
+          </div>
+        ) : (
+          <div
+            class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+            id="projects-grid"
           >
-            <div>
-              <div class="flex items-start justify-between gap-3">
-                <div class="app-icon h-14 w-14 transition-transform duration-200 group-hover:scale-105" style={`--c: ${p.color || '#0A84FF'}`}>
-                  <DevIcon name={p.icon} class="h-7 w-7 text-white" />
+            {projects.map((p) => (
+              <a
+                href={`/p/${p.slug}`}
+                class="card project-card group relative flex flex-col justify-between p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-lift"
+                data-name={p.name.toLowerCase()}
+                data-tags={(p.tags || []).join(",").toLowerCase()}
+                data-desc={(p.tagline || p.description || "").toLowerCase()}
+              >
+                <div>
+                  <div class="flex items-start justify-between gap-3">
+                    <div
+                      class="app-icon h-14 w-14 transition-transform duration-200 group-hover:scale-105"
+                      style={`--c: ${p.color || "#0A84FF"}`}
+                    >
+                      <DevIcon name={p.icon} class="h-7 w-7 text-white" />
+                    </div>
+
+                    <div class="flex items-center gap-1.5">
+                      {p.featured && (
+                        <span class="rounded bg-accent/15 px-2 py-0.5 text-[10.5px] font-semibold text-accent">
+                          Featured
+                        </span>
+                      )}
+                      <span class="badge uppercase text-[10px] font-mono">
+                        {p.source || "postman"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <h2 class="mt-4 text-base font-bold tracking-tight text-fg group-hover:text-accent transition">
+                    {p.name}
+                  </h2>
+                  <p class="mt-1 text-xs leading-relaxed text-muted line-clamp-2">
+                    {p.tagline || p.description || "Tidak ada deskripsi."}
+                  </p>
                 </div>
 
-                <div class="flex items-center gap-1.5">
-                  {p.featured && (
-                    <span class="rounded bg-accent/15 px-2 py-0.5 text-[10.5px] font-semibold text-accent">Featured</span>
-                  )}
-                  <span class="badge uppercase text-[10px] font-mono">{p.source || 'postman'}</span>
+                <div class="mt-5 flex items-center justify-between border-t border-line/10 pt-3 text-xs text-muted">
+                  <span class="font-mono text-[11.5px] font-medium">
+                    {p.endpointCount || 0} endpoint
+                  </span>
+                  <span class="font-medium text-accent flex items-center gap-1 group-hover:translate-x-0.5 transition">
+                    <span>Coba API</span>
+                    <svg
+                      class="h-3.5 w-3.5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </span>
                 </div>
-              </div>
-
-              <h2 class="mt-4 text-base font-bold tracking-tight text-fg group-hover:text-accent transition">
-                {p.name}
-              </h2>
-              <p class="mt-1 text-xs leading-relaxed text-muted line-clamp-2">
-                {p.tagline || p.description || 'Tidak ada deskripsi.'}
-              </p>
-            </div>
-
-            <div class="mt-5 flex items-center justify-between border-t border-line/10 pt-3 text-xs text-muted">
-              <span class="font-mono text-[11.5px] font-medium">{p.endpointCount || 0} endpoint</span>
-              <span class="font-medium text-accent flex items-center gap-1 group-hover:translate-x-0.5 transition">
-                <span>Coba API</span>
-                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              </span>
-            </div>
-          </a>
-        ))}
-      </div>
+              </a>
+            ))}
+          </div>
+        )
+      }
 
       <!-- Empty state when search finds nothing -->
       <div id="no-results" class="hidden my-16 text-center text-muted">
         <p class="text-sm">Tidak ada project yang cocok dengan pencarian.</p>
       </div>
 
-      <!-- Interactive Terminal Preview Box on Home -->
-      <div class="mt-14 card p-6 shadow-window overflow-hidden">
-        <div class="flex items-center justify-between border-b border-line/10 pb-3 mb-4">
-          <div class="flex items-center gap-2">
-            <div class="traffic">
-              <i></i><i></i><i></i>
-            </div>
-            <span class="font-mono text-xs font-semibold text-fg ml-2">Terminal Playground Demo</span>
-          </div>
-          <span class="text-xs text-muted">Bisa dibuka kapan saja via <kbd class="kbd text-[10px]">Ctrl+`</kbd></span>
-        </div>
-
-        <div class="font-mono text-xs leading-relaxed space-y-1.5 text-muted">
-          <div><span class="text-accent font-bold">guest@api-playground ~ $</span> <span class="text-fg">curl -X GET 'https://dummyjson.com/users?limit=2'</span></div>
-          <div class="text-ok font-semibold">200 OK · 118ms · 1.4 kB</div>
-          <pre class="code text-[11px] max-h-48">{`{
-  "users": [
-    { "id": 1, "firstName": "Emily", "lastName": "Johnson", "age": 28, "email": "emily.johnson@x.dummyjson.com" },
-    { "id": 2, "firstName": "Michael", "lastName": "Williams", "age": 35, "email": "michael.williams@x.dummyjson.com" }
-  ],
-  "total": 100,
-  "skip": 0,
-  "limit": 2
-}`}</pre>
-          <div class="pt-2 text-right">
-            <button type="button" id="open-term-cta" class="btn btn-primary text-xs">
-              Buka Terminal Interaktif &gt;_
-            </button>
-          </div>
-        </div>
-      </div>
     </main>
-
-    <!-- Footer -->
   </div>
 
   <TerminalDrawer />
@@ -177,66 +212,62 @@ const allTags = ['all', ...new Set(projects.flatMap((p) => p.tags || []))];
 </Layout>
 
 <script>
-  const searchInput = document.getElementById('proj-search-input') as HTMLInputElement;
-  const cards = document.querySelectorAll<HTMLElement>('.project-card');
-  const tagBtns = document.querySelectorAll<HTMLButtonElement>('.tag-btn');
-  const noResults = document.getElementById('no-results');
+  const searchInput = document.getElementById(
+    "proj-search-input",
+  ) as HTMLInputElement;
+  const cards = document.querySelectorAll<HTMLElement>(".project-card");
+  const tagBtns = document.querySelectorAll<HTMLButtonElement>(".tag-btn");
+  const noResults = document.getElementById("no-results");
 
-  let activeTag = 'all';
+  let activeTag = "all";
 
   function filterProjects() {
-    const q = (searchInput?.value || '').trim().toLowerCase();
+    const q = (searchInput?.value || "").trim().toLowerCase();
     let visibleCount = 0;
 
     cards.forEach((card) => {
-      const name = card.dataset.name || '';
-      const tags = card.dataset.tags || '';
-      const desc = card.dataset.desc || '';
+      const name = card.dataset.name || "";
+      const tags = card.dataset.tags || "";
+      const desc = card.dataset.desc || "";
 
-      const matchesQuery = !q || name.includes(q) || tags.includes(q) || desc.includes(q);
-      const matchesTag = activeTag === 'all' || tags.split(',').includes(activeTag);
+      const matchesQuery =
+        !q || name.includes(q) || tags.includes(q) || desc.includes(q);
+      const matchesTag =
+        activeTag === "all" || tags.split(",").includes(activeTag);
 
       if (matchesQuery && matchesTag) {
-        card.classList.remove('hidden');
+        card.classList.remove("hidden");
         visibleCount++;
       } else {
-        card.classList.add('hidden');
+        card.classList.add("hidden");
       }
     });
 
     if (noResults) {
-      noResults.classList.toggle('hidden', visibleCount > 0);
+      noResults.classList.toggle("hidden", visibleCount > 0);
     }
   }
 
-  searchInput?.addEventListener('input', filterProjects);
+  searchInput?.addEventListener("input", filterProjects);
 
   tagBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      activeTag = btn.dataset.tag || 'all';
+    btn.addEventListener("click", () => {
+      activeTag = btn.dataset.tag || "all";
       tagBtns.forEach((b) => {
         const isCurrent = b.dataset.tag === activeTag;
         b.className = `tag-btn rounded-full px-3 py-1 text-xs font-medium transition ${
-          isCurrent ? 'bg-fg text-bg' : 'bg-line/5 text-muted hover:text-fg hover:bg-line/10'
+          isCurrent
+            ? "bg-fg text-bg"
+            : "bg-line/5 text-muted hover:text-fg hover:bg-line/10"
         }`;
       });
       filterProjects();
     });
   });
 
-  document.getElementById('home-cmd-btn')?.addEventListener('click', () => {
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
-  });
-
-  document.getElementById('footer-cmd-btn')?.addEventListener('click', () => {
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
-  });
-
-  document.getElementById('open-term-cta')?.addEventListener('click', () => {
-    document.getElementById('term-toggle-btn')?.click();
-  });
-
-  document.getElementById('footer-term-btn')?.addEventListener('click', () => {
-    document.getElementById('term-toggle-btn')?.click();
+  document.getElementById("home-cmd-btn")?.addEventListener("click", () => {
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "k", metaKey: true }),
+    );
   });
 </script>

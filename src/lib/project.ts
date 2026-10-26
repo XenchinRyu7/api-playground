@@ -1,9 +1,5 @@
 import type { ImportResult, Item, Project } from './types';
-import { importOpenAPI } from './importers/openapi';
-import { importPostman } from './importers/postman';
 import { PALETTE, slugify } from './util';
-import openapi from '../data/demo-openapi.json';
-import postman from '../data/demo-postman.json';
 
 /** Id yang stabil & mudah dibaca untuk deep link (#list-posts). */
 export function assignIds(items: Item[], used = new Set<string>()): Item[] {
@@ -37,12 +33,4 @@ export function buildProject(r: ImportResult, meta: Partial<Project> & { slug: s
     items: assignIds(r.items),
     updatedAt: now,
   };
-}
-
-/** Project contoh — tampil di publik selama belum ada project yang dipublish. */
-export function demoProjects(): Project[] {
-  return [
-    { ...buildProject(importOpenAPI(openapi), { slug: 'dummyjson', icon: 'cart', color: '#FF9F0A', tags: ['rest', 'auth', 'e-commerce'], tagline: 'Mock REST API: auth JWT, user, produk.', featured: true }), demo: true },
-    { ...buildProject(importPostman(postman), { slug: 'jsonplaceholder', icon: 'api', color: '#0A84FF', tags: ['rest', 'crud', 'postman'], tagline: 'Fake REST API untuk CRUD posts, users, comments.' }), demo: true },
-  ];
 }
