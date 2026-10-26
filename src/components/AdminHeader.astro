@@ -1,0 +1,50 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+interface Props {
+  title?: string;
+  subtitle?: string;
+}
+const { title = 'Admin Dashboard', subtitle = 'Kelola portofolio API' } = Astro.props;
+---
+<header class="glass sticky top-0 z-30 border-b border-line/10 px-6 py-3.5">
+  <div class="mx-auto flex max-w-6xl items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="traffic hidden sm:flex">
+        <i></i><i></i><i></i>
+      </div>
+      <a href="/admin" class="flex items-center gap-2 font-medium tracking-tight hover:opacity-85">
+        <span class="grid h-6 w-6 place-items-center rounded-lg bg-accent text-xs font-bold text-white shadow-sm"></span>
+        <span class="text-[14px] font-semibold">{title}</span>
+        {subtitle && <span class="hidden text-xs text-muted md:inline">· {subtitle}</span>}
+      </a>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <a href="/" class="btn btn-ghost text-xs" target="_blank" rel="noopener">
+        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+        <span>Lihat Web</span>
+      </a>
+      <a href="/admin/new" class="btn btn-primary text-xs">
+        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        <span>Import API</span>
+      </a>
+      <ThemeToggle />
+      <button id="admin-logout-btn" type="button" class="btn btn-ghost text-xs text-bad hover:bg-bad/10" title="Keluar">
+        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<script>
+  const logoutBtn = document.getElementById('admin-logout-btn');
+  logoutBtn?.addEventListener('click', async () => {
+    if (!confirm('Yakin ingin keluar?')) return;
+    try {
+      await fetch('/api/admin/logout', { method: 'POST' });
+      window.location.href = '/admin/login';
+    } catch (e) {
+      alert('Gagal logout');
+    }
+  });
+</script>

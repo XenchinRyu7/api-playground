@@ -1,0 +1,26 @@
+---
+// Segmented control tema: System / Light / Dark. Logika ada di Layout (window.__theme).
+interface Props { class?: string; id?: string }
+const { class: cls = '', id = 'theme-toggle' } = Astro.props;
+const icons = {
+  system: '<path d="M3 4.5A1.5 1.5 0 014.5 3h11A1.5 1.5 0 0117 4.5v8a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 013 12.5v-8zM7 17h6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>',
+  light: '<circle cx="10" cy="10" r="3.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M10 2v1.5M10 16.5V18M2 10h1.5M16.5 10H18M4.3 4.3l1.1 1.1M14.6 14.6l1.1 1.1M4.3 15.7l1.1-1.1M14.6 5.4l1.1-1.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+  dark: '<path d="M16 12.5A6.5 6.5 0 017.5 4a6.5 6.5 0 108.5 8.5z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/>',
+};
+---
+<div class={`seg theme-toggle ${cls}`} role="tablist" aria-label="Tema" id={id}>
+  {Object.entries(icons).map(([k, svg]) => (
+    <button type="button" role="tab" data-theme-set={k} aria-label={`Tema ${k}`} title={k[0].toUpperCase() + k.slice(1)} class="!px-2">
+      <svg viewBox="0 0 20 20" class="h-[15px] w-[15px]" set:html={svg} />
+    </button>
+  ))}
+</div>
+<script>
+  const sync = () => document.querySelectorAll<HTMLElement>('[data-theme-set]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.themeSet === (window as any).__theme.get())));
+  document.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-theme-set]');
+    if (b) (window as any).__theme.set(b.dataset.themeSet);
+  });
+  addEventListener('themechange', sync);
+  sync();
+</script>

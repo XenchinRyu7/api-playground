@@ -2,10 +2,17 @@
   "name": "api-playground",
   "type": "module",
   "version": "1.0.0",
-  "scripts": { "dev": "astro dev", "build": "astro build", "preview": "astro preview" },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
   "dependencies": {
     "@astrojs/tailwind": "^5.1.0",
+    "@astrojs/vercel": "^7.8.2",
+    "@fontsource-variable/inter": "^5.3.0",
     "@fontsource-variable/jetbrains-mono": "^5.1.0",
+    "@vercel/blob": "^0.27.3",
     "astro": "^4.16.0",
     "tailwindcss": "^3.4.0"
   }

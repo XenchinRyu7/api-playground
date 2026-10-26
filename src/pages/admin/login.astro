@@ -1,0 +1,109 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ThemeToggle from '../../components/ThemeToggle.astro';
+import { isAuthed, adminConfigured } from '../../lib/auth';
+
+if (await isAuthed(Astro.cookies)) {
+  return Astro.redirect('/admin');
+}
+
+const configured = adminConfigured();
+---
+<Layout title="Admin Login · API Playground" noindex>
+  <div class="relative flex min-h-screen flex-col items-center justify-center p-4">
+    <!-- Ambient glow behind window -->
+    <div class="pointer-events-none absolute -top-24 left-1/2 -z-10 h-96 w-96 -translate-x-1/2 rounded-full bg-accent/15 blur-3xl"></div>
+
+    <div class="absolute right-6 top-6">
+      <ThemeToggle />
+    </div>
+
+    <div class="card w-full max-w-[380px] p-7 shadow-window transition-all">
+      <!-- Traffic lights -->
+      <div class="traffic mb-5">
+        <i></i><i></i><i></i>
+      </div>
+
+      <!-- App Icon / Lock -->
+      <div class="mb-5 flex flex-col items-center text-center">
+        <div class="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-tr from-accent to-teal text-3xl shadow-soft">
+          🔐
+        </div>
+        <h1 class="mt-3 text-lg font-semibold tracking-tight text-fg">Admin Access</h1>
+        <p class="mt-0.5 text-xs text-muted">Masukkan password admin untuk mengelola API</p>
+      </div>
+
+      {!configured && (
+        <div class="mb-4 rounded-xl border border-warn/25 bg-warn/10 p-3 text-xs leading-relaxed text-warn">
+          <p class="font-medium">⚠️ ADMIN_PASSWORD belum diset!</p>
+          <p class="mt-0.5 text-muted">Isi variabel lingkungan <code class="rounded bg-black/10 px-1 py-0.5 font-mono text-[11px] dark:bg-white/10">ADMIN_PASSWORD</code> di <code class="font-mono">.env</code> atau Vercel Project Settings.</p>
+        </div>
+      )}
+
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label for="password" class="mb-1.5 block text-[12px] font-medium text-muted">Password Admin</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            autocomplete="current-password"
+            placeholder="••••••••••••"
+            class="field py-2 text-sm"
+            autofocus
+          />
+        </div>
+
+        <p id="error-msg" class="hidden rounded-lg bg-bad/10 px-2.5 py-1.5 text-xs text-bad"></p>
+
+        <button type="submit" id="submit-btn" class="btn btn-primary w-full py-2 text-sm">
+          <span>Masuk</span>
+        </button>
+      </form>
+
+      <div class="mt-6 border-t border-line/10 pt-4 text-center">
+        <a href="/" class="text-xs text-muted transition hover:text-fg">← Kembali ke Halaman Utama</a>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  const form = document.getElementById('login-form') as HTMLFormElement;
+  const pwInput = document.getElementById('password') as HTMLInputElement;
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+  const errorMsg = document.getElementById('error-msg') as HTMLParagraphElement;
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorMsg.classList.add('hidden');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Memverifikasi...';
+
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pwInput.value }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Password salah.');
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get('next') || '/admin';
+      window.location.href = next;
+    } catch (err: any) {
+      errorMsg.textContent = err.message;
+      errorMsg.classList.remove('hidden');
+      pwInput.focus();
+      pwInput.select();
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Masuk';
+    }
+  });
+</script>

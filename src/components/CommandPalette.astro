@@ -1,0 +1,188 @@
+---
+// Command Palette (⌘K / Ctrl+K) modal dialog
+---
+<div id="cmd-palette" class="backdrop fixed inset-0 z-50 hidden flex items-start justify-center pt-20 p-4">
+  <div class="sheet w-full max-w-xl overflow-hidden p-0 shadow-window" id="cmd-sheet">
+    <!-- Header Input -->
+    <div class="flex items-center gap-3 border-b border-line/10 px-4 py-3">
+      <svg class="h-4 w-4 text-muted shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input
+        type="text"
+        id="cmd-input"
+        placeholder="Cari endpoint, folder, atau aksi... (ESC untuk keluar)"
+        class="w-full bg-transparent text-sm text-fg outline-none placeholder:text-muted"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <kbd class="kbd text-[10px]">ESC</kbd>
+    </div>
+
+    <!-- Results List -->
+    <div id="cmd-results" class="max-h-80 overflow-y-auto p-2 space-y-1"></div>
+
+    <!-- Footer tips -->
+    <div class="border-t border-line/10 bg-black/5 dark:bg-white/5 px-4 py-2 flex items-center justify-between text-[11px] text-muted">
+      <span>Gunakan tombol <kbd class="kbd text-[9.5px]">↑</kbd> <kbd class="kbd text-[9.5px]">↓</kbd> untuk memilih</span>
+      <span>Tekan <kbd class="kbd text-[9.5px]">ENTER</kbd> untuk membuka</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const palette = document.getElementById('cmd-palette') as HTMLElement;
+  const input = document.getElementById('cmd-input') as HTMLInputElement;
+  const results = document.getElementById('cmd-results') as HTMLElement;
+
+  let isOpen = false;
+  let selectedIndex = 0;
+  let items: any[] = [];
+
+  function openPalette() {
+    isOpen = true;
+    palette.classList.remove('hidden');
+    input.value = '';
+    buildItems();
+    render();
+    input.focus();
+  }
+
+  function closePalette() {
+    isOpen = false;
+    palette.classList.add('hidden');
+  }
+
+  function buildItems() {
+    items = [];
+    // Collect endpoints from playground project if present
+    const project = (window as any).__PLAYGROUND_PROJECT__;
+    if (project) {
+      const walk = (list: any[], path = '') => {
+        list.forEach((it) => {
+          if (it.kind === 'folder') {
+            walk(it.items || [], `${path}${it.name} / `);
+          } else {
+            items.push({
+              type: 'endpoint',
+              id: it.id,
+              name: it.name,
+              method: it.method,
+              url: it.url,
+              folder: path,
+              action: () => {
+                window.location.hash = it.id;
+              },
+            });
+          }
+        });
+      };
+      walk(project.items || []);
+    }
+
+    // Default global actions
+    items.push(
+      {
+        type: 'action',
+        name: 'Ganti Tema ke Dark',
+        action: () => (window as any).__theme?.set('dark'),
+      },
+      {
+        type: 'action',
+        name: 'Ganti Tema ke Light',
+        action: () => (window as any).__theme?.set('light'),
+      },
+      {
+        type: 'action',
+        name: 'Buka Terminal',
+        action: () => document.getElementById('term-toggle-btn')?.click(),
+      },
+      {
+        type: 'action',
+        name: 'Kembali ke Halaman Utama',
+        action: () => (window.location.href = '/'),
+      }
+    );
+  }
+
+  function render() {
+    const q = input.value.trim().toLowerCase();
+    const filtered = items.filter((it) => {
+      if (!q) return true;
+      if (it.type === 'endpoint') {
+        return it.name.toLowerCase().includes(q) || it.url.toLowerCase().includes(q) || it.method.toLowerCase().includes(q);
+      }
+      return it.name.toLowerCase().includes(q);
+    });
+
+    results.innerHTML = '';
+    if (!filtered.length) {
+      results.innerHTML = '<div class="p-4 text-center text-xs text-muted">Tidak ada hasil ditemukan.</div>';
+      return;
+    }
+
+    filtered.forEach((it, idx) => {
+      const el = document.createElement('div');
+      el.className = `flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer text-xs transition select-none ${
+        idx === selectedIndex ? 'bg-accent text-white' : 'hover:bg-line/5 text-fg'
+      }`;
+
+      if (it.type === 'endpoint') {
+        el.innerHTML = `
+          <div class="flex items-center gap-2 truncate">
+            <span class="verb v-${it.method.toLowerCase()} text-[10px] shrink-0">${it.method}</span>
+            <span class="truncate font-medium">${it.name}</span>
+            ${it.folder ? `<span class="text-[10px] opacity-60">(${it.folder})</span>` : ''}
+          </div>
+          <span class="font-mono text-[10.5px] opacity-60 truncate ml-2">${it.url}</span>
+        `;
+      } else {
+        el.innerHTML = `
+          <span class="font-medium">⚡️ ${it.name}</span>
+          <span class="text-[10.5px] opacity-60">Aksi</span>
+        `;
+      }
+
+      el.addEventListener('click', () => {
+        it.action();
+        closePalette();
+      });
+
+      results.appendChild(el);
+    });
+  }
+
+  input.addEventListener('input', () => {
+    selectedIndex = 0;
+    render();
+  });
+
+  input.addEventListener('keydown', (e) => {
+    const count = results.children.length;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      selectedIndex = (selectedIndex + 1) % count;
+      render();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      selectedIndex = (selectedIndex - 1 + count) % count;
+      render();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const selected = results.children[selectedIndex] as HTMLElement;
+      selected?.click();
+    } else if (e.key === 'Escape') {
+      closePalette();
+    }
+  });
+
+  palette.addEventListener('click', (e) => {
+    if (e.target === palette) closePalette();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.key === 'k' || e.key === 'K') && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      if (isOpen) closePalette();
+      else openPalette();
+    }
+  });
+</script>

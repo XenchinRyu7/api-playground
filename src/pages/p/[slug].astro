@@ -1,0 +1,258 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ThemeToggle from '../../components/ThemeToggle.astro';
+import TerminalDrawer from '../../components/TerminalDrawer.astro';
+import CommandPalette from '../../components/CommandPalette.astro';
+import { loadProject } from '../../lib/data';
+
+const { slug } = Astro.params;
+const project = await loadProject(slug || '', false);
+
+if (!project) {
+  return Astro.redirect('/?notfound=1');
+}
+---
+<Layout title={`${project.name} · API Playground`} description={project.tagline || project.description}>
+  <!-- Main Window Frame (macOS Style) -->
+  <div class="flex h-screen w-screen flex-col overflow-hidden bg-bg">
+    <!-- macOS Window Toolbar -->
+    <header class="glass z-30 flex h-12 shrink-0 items-center justify-between border-b border-line/10 px-4 select-none">
+      <div class="flex items-center gap-3">
+        <div class="traffic hidden sm:flex">
+          <a href="/" class="contents" title="Kembali ke Beranda"><i class="hover:opacity-80"></i></a>
+          <i></i><i></i>
+        </div>
+
+        <a href="/" class="flex items-center gap-2 text-xs font-medium text-muted hover:text-fg">
+          <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          <span class="hidden md:inline">Semua Project</span>
+        </a>
+
+        <div class="h-4 w-px bg-line/10"></div>
+
+        <div class="flex items-center gap-2">
+          <div class="app-icon h-7 w-7 text-sm" style={`--c: ${project.color || '#0A84FF'}`}>
+            {project.icon || '⚡️'}
+          </div>
+          <div>
+            <span class="text-xs font-semibold text-fg tracking-tight">{project.name}</span>
+            <span class="hidden text-[11px] text-muted lg:inline">· {project.endpointCount} endpoints</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center search / Command Palette Trigger -->
+      <button
+        type="button"
+        id="open-cmd-btn"
+        class="hidden sm:flex items-center gap-2 rounded-lg border border-line/10 bg-line/5 px-3 py-1.5 text-xs text-muted hover:border-line/20 hover:text-fg transition"
+      >
+        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <span>Cari endpoint / aksi...</span>
+        <kbd class="kbd text-[10px]">⌘K</kbd>
+      </button>
+
+      <!-- Right Toolbar Tools -->
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          id="env-btn"
+          class="btn btn-ghost px-2.5 py-1 text-xs"
+          title="Kelola Environment Variables"
+        >
+          <svg class="h-3.5 w-3.5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          <span class="hidden md:inline">Environment</span>
+        </button>
+
+        <ThemeToggle />
+      </div>
+    </header>
+
+    <!-- Workspace Body (3 Columns: Sidebar - Request Editor - Response/Snippets) -->
+    <div class="grid flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[260px_1fr_420px] xl:grid-cols-[280px_1fr_460px]">
+      <!-- Left Sidebar (Endpoints Tree) -->
+      <aside class="flex flex-col border-r border-line/10 bg-surface/50 overflow-hidden">
+        <div class="p-3 border-b border-line/10">
+          <div class="relative">
+            <svg class="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input
+              type="text"
+              id="ep-search"
+              placeholder="Filter endpoint..."
+              class="field pl-8 py-1 text-xs"
+            />
+          </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto p-2" id="ep-nav" aria-label="Endpoint Navigation"></nav>
+
+        <div class="border-t border-line/10 p-3 bg-black/5 dark:bg-white/5 flex items-center justify-between text-[11px] text-muted">
+          <span class="font-mono">{project.endpointCount} items</span>
+          <span class="uppercase text-[10px]">{project.source}</span>
+        </div>
+      </aside>
+
+      <!-- Center: Request Builder -->
+      <main class="flex flex-col overflow-y-auto border-r border-line/10 bg-bg p-5 space-y-4">
+        <!-- Endpoint Header -->
+        <div>
+          <h2 class="text-lg font-bold tracking-tight text-fg" id="req-summary">Pilih endpoint di sidebar</h2>
+          <p class="text-xs text-muted" id="req-desc-short"></p>
+        </div>
+
+        <!-- URL Bar -->
+        <div class="card p-2 shadow-soft">
+          <div class="flex items-center gap-2">
+            <select id="req-method" class="w-24 font-mono font-bold text-xs uppercase bg-line/10 rounded-lg px-2 py-2 outline-none cursor-pointer">
+              <option value="GET">GET</option>
+              <option value="POST">POST</option>
+              <option value="PUT">PUT</option>
+              <option value="PATCH">PATCH</option>
+              <option value="DELETE">DELETE</option>
+              <option value="HEAD">HEAD</option>
+              <option value="OPTIONS">OPTIONS</option>
+            </select>
+
+            <input
+              type="text"
+              id="req-url"
+              class="flex-1 font-mono text-xs bg-transparent outline-none px-2 py-1 text-fg"
+              placeholder="{{baseUrl}}/path"
+            />
+
+            <button
+              type="button"
+              id="req-send"
+              class="btn btn-primary px-4 py-2 text-xs flex items-center gap-1.5 shrink-0"
+            >
+              <span>Kirim</span>
+              <kbd class="kbd text-[9.5px]">Ctrl+Enter</kbd>
+            </button>
+          </div>
+
+          <!-- Highlighted preview -->
+          <div class="mt-1.5 border-t border-line/5 pt-1 px-1 font-mono text-[11px] text-muted truncate">
+            <span>Resolusi: </span>
+            <span id="url-resolved-preview" class="text-fg"></span>
+          </div>
+        </div>
+
+        <!-- Request Tabs -->
+        <div class="card flex-1 flex flex-col p-4 shadow-soft">
+          <div class="tabs border-b border-line/10 pb-2 mb-4">
+            <button type="button" class="tab req-tab-btn" data-tab="params" aria-selected="true">Params</button>
+            <button type="button" class="tab req-tab-btn" data-tab="body">Body</button>
+            <button type="button" class="tab req-tab-btn" data-tab="headers">Headers</button>
+            <button type="button" class="tab req-tab-btn" data-tab="auth">Auth</button>
+            <button type="button" class="tab req-tab-btn" data-tab="docs">Dokumentasi</button>
+          </div>
+
+          <div id="tab-content" class="flex-1 overflow-y-auto"></div>
+        </div>
+      </main>
+
+      <!-- Right: Response & Snippets -->
+      <aside class="flex flex-col overflow-y-auto bg-surface/30 p-5 space-y-4">
+        <!-- Response Card -->
+        <div class="card flex flex-col p-4 shadow-soft">
+          <div class="flex items-center justify-between border-b border-line/10 pb-3 mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-fg">Response</span>
+              <span id="res-status" class="badge text-muted">Belum ada request</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="res-time" class="font-mono text-[11px] text-muted"></span>
+              <span id="res-size" class="font-mono text-[11px] text-muted"></span>
+              <button type="button" id="copy-res-btn" class="btn btn-ghost px-1.5 py-0.5 text-[11px]">Copy</button>
+            </div>
+          </div>
+
+          <!-- Response Tabs -->
+          <div class="seg mb-3" id="res-tabs-seg">
+            <button type="button" class="res-tab-btn" data-res-tab="pretty" aria-selected="true">Pretty</button>
+            <button type="button" class="res-tab-btn" data-res-tab="raw">Raw</button>
+            <button type="button" class="res-tab-btn" data-res-tab="headers">Headers</button>
+          </div>
+
+          <div id="res-viewer" class="min-h-[160px] max-h-[340px] overflow-auto">
+            <div class="p-8 text-center text-xs text-muted">
+              Tekan <kbd class="kbd text-[10px]">Kirim</kbd> untuk mengeksekusi request.
+            </div>
+          </div>
+        </div>
+
+        <!-- Code Snippet Card -->
+        <div class="card flex-1 flex flex-col p-4 shadow-soft">
+          <div class="flex items-center justify-between border-b border-line/10 pb-2 mb-3">
+            <span class="text-xs font-semibold text-fg">Code Snippet</span>
+            <button type="button" id="copy-snip-btn" class="btn btn-ghost px-1.5 py-0.5 text-[11px]">Copy Code</button>
+          </div>
+
+          <!-- Snippet Lang Selector -->
+          <div class="seg overflow-x-auto mb-3" id="snip-lang-select">
+            <button type="button" data-lang="curl" aria-selected="true">cURL</button>
+            <button type="button" data-lang="fetch">Fetch</button>
+            <button type="button" data-lang="axios">Axios</button>
+            <button type="button" data-lang="python">Python</button>
+            <button type="button" data-lang="go">Go</button>
+            <button type="button" data-lang="php">PHP</button>
+            <button type="button" data-lang="dart">Dart</button>
+          </div>
+
+          <pre class="code flex-1 max-h-[300px] overflow-auto leading-relaxed"><code id="snippet-viewer"></code></pre>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Environment Variables Modal -->
+  <div id="env-modal" class="backdrop fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="sheet w-full max-w-lg p-6 shadow-window">
+      <div class="flex items-center justify-between border-b border-line/10 pb-3 mb-4">
+        <div>
+          <h3 class="text-sm font-semibold text-fg">Environment Variables</h3>
+          <p class="text-xs text-muted">Variabel aktif untuk project ini (disimpan di browser Anda).</p>
+        </div>
+        <button type="button" id="close-env-btn" class="text-muted hover:text-fg text-lg">×</button>
+      </div>
+
+      <div class="max-h-64 overflow-y-auto mb-4 border border-line/10 rounded-lg">
+        <table class="kv">
+          <thead>
+            <tr class="border-b border-line/10 bg-bg">
+              <th>Variable Key</th>
+              <th>Value</th>
+              <th class="w-8"></th>
+            </tr>
+          </thead>
+          <tbody id="env-table-body"></tbody>
+        </table>
+      </div>
+
+      <div class="flex items-center justify-between border-t border-line/10 pt-3">
+        <button type="button" id="add-env-row-btn" class="btn btn-ghost text-xs">+ Tambah Variabel</button>
+        <button type="button" id="save-env-btn" class="btn btn-primary text-xs">Simpan Perubahan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Terminal & Command Palette Components -->
+  <TerminalDrawer project={project} />
+  <CommandPalette />
+</Layout>
+
+<script>
+  import { initPlayground } from '../../scripts/playground/client.js';
+
+  const openCmdBtn = document.getElementById('open-cmd-btn');
+  openCmdBtn?.addEventListener('click', () => {
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
+  });
+
+  const project = (window as any).__PLAYGROUND_PROJECT__ || JSON.parse(document.getElementById('project-raw-data')?.textContent || '{}');
+  if (project?.slug) {
+    initPlayground(project);
+  }
+</script>
+
+<script type="application/json" id="project-raw-data" set:html={JSON.stringify(project)} />

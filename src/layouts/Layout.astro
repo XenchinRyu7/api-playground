@@ -1,18 +1,49 @@
 ---
+import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import '../styles/global.css';
-const { title = 'API Playground' } = Astro.props;
+import { SITE } from '../config';
+
+interface Props { title?: string; description?: string; noindex?: boolean; bodyClass?: string }
+const { title = SITE.name, description = SITE.description, noindex = false, bodyClass = '' } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url).href;
 ---
 <!doctype html>
 <html lang="id">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{title}</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%2309090b'/%3E%3Cpath d='M4 4l5 4-5 4' stroke='%2367e8f9' fill='none' stroke-width='2'/%3E%3C/svg%3E" />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta name="twitter:card" content="summary" />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0c0c0e" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!-- Terapkan tema sebelum paint supaya tidak ada flash -->
+    <script is:inline>
+      (() => {
+        const mq = matchMedia('(prefers-color-scheme: dark)');
+        const apply = (mode) => {
+          const dark = mode === 'dark' || (mode !== 'light' && mq.matches);
+          document.documentElement.classList.toggle('dark', dark);
+          document.documentElement.dataset.theme = mode;
+        };
+        window.__theme = {
+          get: () => localStorage.getItem('theme') || 'system',
+          set: (mode) => { localStorage.setItem('theme', mode); apply(mode); dispatchEvent(new CustomEvent('themechange', { detail: mode })); },
+        };
+        apply(window.__theme.get());
+        mq.addEventListener('change', () => apply(window.__theme.get()));
+        addEventListener('load', () => requestAnimationFrame(() => document.documentElement.classList.add('theme-ready')));
+      })();
+    </script>
   </head>
-  <body class="bg-ink font-mono text-zinc-100 antialiased">
+  <body class={`bg-bg text-fg ${bodyClass}`}>
     <slot />
   </body>
 </html>

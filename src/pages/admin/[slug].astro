@@ -1,0 +1,287 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import AdminHeader from '../../components/AdminHeader.astro';
+import { loadProject } from '../../lib/data';
+import { PALETTE } from '../../lib/util';
+
+const { slug } = Astro.params;
+const project = await loadProject(slug || '', true);
+
+if (!project) {
+  return Astro.redirect('/admin');
+}
+---
+<Layout title={`Edit ${project.name} · Admin`} noindex>
+  <AdminHeader title={`Edit: ${project.name}`} subtitle={`/${project.slug}`} />
+
+  <main class="mx-auto max-w-4xl px-6 py-8">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <a href="/admin" class="text-xs text-muted hover:text-fg">← Kembali ke Dashboard</a>
+        <h1 class="mt-2 text-2xl font-bold tracking-tight text-fg flex items-center gap-2">
+          <span>{project.icon}</span>
+          <span>{project.name}</span>
+        </h1>
+        <p class="mt-0.5 text-xs text-muted">Diperbarui: {new Date(project.updatedAt).toLocaleString('id-ID')}</p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <a href={`/p/${project.slug}`} target="_blank" class="btn btn-ghost text-xs">
+          Buka Playground ↗
+        </a>
+        <button type="button" id="export-btn" class="btn btn-ghost text-xs">
+          Export JSON
+        </button>
+        <button type="button" id="delete-btn" class="btn btn-danger text-xs">
+          Hapus Project
+        </button>
+      </div>
+    </div>
+
+    <!-- Re-upload collection card -->
+    <div class="card mb-6 p-5 border-dashed">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h3 class="text-sm font-semibold text-fg">Update Koleksi API</h3>
+          <p class="text-xs text-muted">Upload file Postman/OpenAPI baru untuk memperbarui endpoint tanpa mereset metadata.</p>
+        </div>
+        <div>
+          <input type="file" id="reupload-input" accept=".json,application/json" class="hidden" />
+          <button type="button" id="reupload-btn" class="btn btn-ghost text-xs border border-line/15">
+            Pilih File Baru (.json)
+          </button>
+        </div>
+      </div>
+      <p id="reupload-status" class="hidden mt-2 text-xs"></p>
+    </div>
+
+    <!-- Metadata Form -->
+    <div class="card p-6 shadow-soft">
+      <form id="edit-form" class="space-y-5">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label class="mb-1 block text-xs font-medium text-muted">Nama Project</label>
+            <input type="text" id="name" value={project.name} required class="field text-sm" />
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium text-muted">Slug (Permanen)</label>
+            <input type="text" value={project.slug} disabled class="field font-mono text-sm opacity-60" />
+          </div>
+        </div>
+
+        <div>
+          <label class="mb-1 block text-xs font-medium text-muted">Tagline Singkat</label>
+          <input type="text" id="tagline" value={project.tagline || ''} class="field text-sm" />
+        </div>
+
+        <div>
+          <label class="mb-1 block text-xs font-medium text-muted">Deskripsi</label>
+          <textarea id="description" rows="3" class="field text-xs">{project.description || ''}</textarea>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div>
+            <label class="mb-1 block text-xs font-medium text-muted">Icon / Emoji</label>
+            <input type="text" id="icon" value={project.icon || '⚡️'} class="field text-center text-lg" maxlength="4" />
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium text-muted">Warna Tema</label>
+            <div class="flex items-center gap-2">
+              <input type="color" id="color" value={project.color || '#0A84FF'} class="h-9 w-12 cursor-pointer rounded border-0 bg-transparent p-0" />
+              <div class="flex flex-wrap gap-1" id="palette-presets">
+                {PALETTE.slice(0, 6).map((c) => (
+                  <button type="button" class="h-5 w-5 rounded-full border border-black/20" style={`background-color: ${c}`} data-color={c}></button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium text-muted">Tags (pisahkan koma)</label>
+            <input type="text" id="tags" value={(project.tags || []).join(', ')} class="field text-xs" />
+          </div>
+        </div>
+
+        <div class="flex items-center gap-6 border-t border-line/10 pt-4">
+          <label class="flex items-center gap-2 cursor-pointer text-xs font-medium">
+            <input type="checkbox" id="published" checked={project.published} class="check" />
+            <span>Publikasikan (tampil di halaman utama)</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-xs font-medium">
+            <input type="checkbox" id="featured" checked={project.featured} class="check" />
+            <span>Featured</span>
+          </label>
+        </div>
+
+        <!-- Project Variables -->
+        <div class="border-t border-line/10 pt-4">
+          <div class="mb-2 flex items-center justify-between">
+            <h3 class="text-xs font-semibold text-muted">Variabel Lingkungan Default ({project.variables?.length || 0})</h3>
+          </div>
+          <div class="overflow-x-auto rounded-lg border border-line/10">
+            <table class="kv">
+              <thead>
+                <tr class="border-b border-line/10 bg-bg">
+                  <th class="w-8"></th>
+                  <th>Variabel</th>
+                  <th>Nilai Default</th>
+                </tr>
+              </thead>
+              <tbody id="vars-body">
+                {(project.variables || []).map((v, i) => (
+                  <tr class="border-b border-line/5 last:border-none">
+                    <td class="text-center">
+                      <input type="checkbox" class="check" data-idx={i} data-field="enabled" checked={v.enabled !== false} />
+                    </td>
+                    <td>
+                      <input type="text" class="field py-1 font-mono text-xs" data-idx={i} data-field="key" value={v.key} />
+                    </td>
+                    <td>
+                      <input type="text" class="field py-1 font-mono text-xs" data-idx={i} data-field="value" value={v.value} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t border-line/10">
+          <a href="/admin" class="btn btn-ghost text-xs">Kembali</a>
+          <button type="submit" id="save-btn" class="btn btn-primary text-xs">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </main>
+</Layout>
+
+<script define:vars={{ project }}>
+  const form = document.getElementById('edit-form');
+  const saveBtn = document.getElementById('save-btn');
+  const deleteBtn = document.getElementById('delete-btn');
+  const exportBtn = document.getElementById('export-btn');
+  const reuploadBtn = document.getElementById('reupload-btn');
+  const reuploadInput = document.getElementById('reupload-input');
+  const reuploadStatus = document.getElementById('reupload-status');
+
+  document.querySelectorAll('#palette-presets button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const color = btn.dataset.color;
+      if (color) document.getElementById('color').value = color;
+    });
+  });
+
+  exportBtn?.addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${project.slug}-export.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  deleteBtn?.addEventListener('click', async () => {
+    if (!confirm(`Hapus permanen project "${project.name}"?`)) return;
+    try {
+      const res = await fetch(`/api/admin/projects/${project.slug}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Gagal menghapus project');
+      window.location.href = '/admin';
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
+  reuploadBtn?.addEventListener('click', () => reuploadInput?.click());
+  reuploadInput?.addEventListener('change', async () => {
+    if (!reuploadInput.files?.length) return;
+    const file = reuploadInput.files[0];
+    reuploadStatus.className = 'mt-2 text-xs text-muted block';
+    reuploadStatus.textContent = `Memproses ${file.name}...`;
+
+    try {
+      const text = await file.text();
+      const prevRes = await fetch('/api/admin/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: text,
+      });
+      const data = await prevRes.json();
+      if (!prevRes.ok) throw new Error(data.error || 'Gagal memproses file.');
+
+      if (data.kind !== 'collection') {
+        throw new Error('File harus berupa Postman Collection atau OpenAPI Spec.');
+      }
+
+      const res = await fetch(`/api/admin/projects/${project.slug}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          source: data.result.source,
+          items: data.result.items,
+          endpointCount: data.result.endpointCount,
+        }),
+      });
+      if (!res.ok) throw new Error('Gagal mengupdate koleksi.');
+
+      reuploadStatus.className = 'mt-2 text-xs text-ok block';
+      reuploadStatus.textContent = `✓ Berhasil memperbarui ${data.result.endpointCount} endpoint! Memuat ulang...`;
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (err) {
+      reuploadStatus.className = 'mt-2 text-xs text-bad block';
+      reuploadStatus.textContent = `❌ ${err.message}`;
+    }
+  });
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Menyimpan...';
+
+    const tags = (document.getElementById('tags').value || '')
+      .split(',')
+      .map((t) => t.trim().toLowerCase())
+      .filter(Boolean);
+
+    // Read variables from table
+    const vars = [];
+    const rows = document.querySelectorAll('#vars-body tr');
+    rows.forEach((r) => {
+      const key = r.querySelector('[data-field="key"]')?.value?.trim();
+      const value = r.querySelector('[data-field="value"]')?.value ?? '';
+      const enabled = r.querySelector('[data-field="enabled"]')?.checked ?? true;
+      if (key) vars.push({ key, value, enabled });
+    });
+
+    const updates = {
+      name: document.getElementById('name').value,
+      tagline: document.getElementById('tagline').value,
+      description: document.getElementById('description').value,
+      icon: document.getElementById('icon').value || '⚡️',
+      color: document.getElementById('color').value || '#0A84FF',
+      tags,
+      published: document.getElementById('published').checked,
+      featured: document.getElementById('featured').checked,
+      variables: vars,
+    };
+
+    try {
+      const res = await fetch(`/api/admin/projects/${project.slug}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal menyimpan.');
+
+      saveBtn.textContent = 'Tersimpan ✓';
+      setTimeout(() => {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Simpan Perubahan';
+      }, 1500);
+    } catch (err) {
+      alert(err.message);
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Simpan Perubahan';
+    }
+  });
+</script>

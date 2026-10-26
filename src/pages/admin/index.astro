@@ -1,0 +1,153 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import AdminHeader from '../../components/AdminHeader.astro';
+import { listProjects, storageKind } from '../../lib/store';
+import { demoProjects } from '../../lib/project';
+import { toMeta } from '../../lib/store';
+
+let projects = [];
+let storageErr = '';
+let isDemoFallback = false;
+
+try {
+  projects = await listProjects({ includeDrafts: true });
+  if (projects.length === 0) {
+    projects = demoProjects().map(toMeta);
+    isDemoFallback = true;
+  }
+} catch (e: any) {
+  storageErr = e.message;
+  projects = demoProjects().map(toMeta);
+  isDemoFallback = true;
+}
+
+const currentStorage = storageKind();
+---
+<Layout title="Dashboard · Admin API Playground" noindex>
+  <AdminHeader title="Dashboard" subtitle="Kelola portofolio API Anda" />
+
+  <main class="mx-auto max-w-6xl px-6 py-8">
+    <!-- Storage & Info Banner -->
+    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-fg">Project API</h1>
+        <p class="mt-1 text-sm text-muted">Semua koleksi dan spesifikasi API yang terdaftar di portofolio.</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span class="inline-flex items-center gap-1.5 rounded-full border border-line/10 bg-surface px-3 py-1 text-xs font-medium text-muted shadow-sm">
+          <span class="h-2 w-2 rounded-full bg-ok"></span>
+          <span>Storage: <strong>{currentStorage}</strong></span>
+        </span>
+        <a href="/admin/new" class="btn btn-primary text-xs">
+          <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          <span>Upload File Postman / OpenAPI</span>
+        </a>
+      </div>
+    </div>
+
+    {storageErr && (
+      <div class="mb-6 rounded-xl border border-bad/20 bg-bad/10 p-4 text-xs text-bad">
+        <p class="font-semibold">Peringatan Penyimpanan:</p>
+        <p class="mt-1">{storageErr}</p>
+      </div>
+    )}
+
+    {isDemoFallback && (
+      <div class="mb-6 rounded-xl border border-accent/20 bg-accent/5 p-4 text-xs text-muted">
+        <p class="font-medium text-accent">ℹ️ Menampilkan project contoh (demo)</p>
+        <p class="mt-0.5">Database/storage masih kosong. Klik tombol <strong>Upload File Postman / OpenAPI</strong> untuk menambahkan koleksi API Anda sendiri.</p>
+      </div>
+    )}
+
+    <!-- Project Grid -->
+    <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+      {projects.map((p) => (
+        <div class="card group flex flex-col justify-between p-5 transition duration-200 hover:-translate-y-1 hover:shadow-lift" style={`--c: ${p.color || '#0A84FF'}`}>
+          <div>
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="app-icon h-12 w-12 text-2xl" style={`--c: ${p.color || '#0A84FF'}`}>
+                  {p.icon || '⚡️'}
+                </div>
+                <div>
+                  <h3 class="font-semibold text-fg tracking-tight">{p.name}</h3>
+                  <span class="font-mono text-xs text-muted">/{p.slug}</span>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-1">
+                {p.featured && (
+                  <span class="rounded bg-accent/15 px-1.5 py-0.5 text-[10.5px] font-semibold text-accent">Featured</span>
+                )}
+                <span class={`rounded px-1.5 py-0.5 text-[10.5px] font-semibold ${p.published ? 'bg-ok/15 text-ok' : 'bg-muted/15 text-muted'}`}>
+                  {p.published ? 'Live' : 'Draft'}
+                </span>
+              </div>
+            </div>
+
+            <p class="mt-3 line-clamp-2 text-xs leading-relaxed text-muted">
+              {p.tagline || p.description || 'Tidak ada deskripsi.'}
+            </p>
+
+            <div class="mt-3 flex flex-wrap gap-1.5">
+              <span class="badge font-mono text-[11px]">
+                {p.endpointCount || 0} endpoint
+              </span>
+              <span class="badge uppercase text-[10px]">
+                {p.source || 'postman'}
+              </span>
+              {(p.tags || []).slice(0, 3).map((tag: string) => (
+                <span class="badge text-[10.5px]">#{tag}</span>
+              ))}
+            </div>
+          </div>
+
+          <!-- Card Actions Footer -->
+          <div class="mt-5 flex items-center justify-between border-t border-line/10 pt-3.5">
+            <a href={`/p/${p.slug}`} target="_blank" class="text-xs font-medium text-accent hover:underline flex items-center gap-1">
+              <span>Buka Playground</span>
+              <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+            </a>
+
+            <div class="flex items-center gap-1.5">
+              <a href={`/admin/${p.slug}`} class="btn btn-ghost px-2.5 py-1 text-xs">
+                Edit
+              </a>
+              <button
+                type="button"
+                class="btn btn-ghost px-2 py-1 text-xs text-bad hover:bg-bad/10 delete-btn"
+                data-slug={p.slug}
+                data-name={p.name}
+                title="Hapus"
+              >
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </main>
+</Layout>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('.delete-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const slug = btn.dataset.slug;
+      const name = btn.dataset.name;
+      if (!slug) return;
+
+      if (!confirm(`Hapus project "${name}" (${slug})? Tindakan ini tidak dapat dibatalkan.`)) return;
+
+      try {
+        const res = await fetch(`/api/admin/projects/${slug}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Gagal menghapus');
+        window.location.reload();
+      } catch (err: any) {
+        alert(err.message);
+      }
+    });
+  });
+</script>

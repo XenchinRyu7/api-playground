@@ -1,0 +1,80 @@
+---
+interface Props {
+  project?: any;
+}
+const { project = null } = Astro.props;
+---
+<div id="term-drawer" class="fixed inset-x-0 bottom-0 z-40 hidden h-[420px] transition-transform duration-200 ease-spring">
+  <div class="mx-auto flex h-full max-w-6xl flex-col rounded-t-2xl border-t border-x border-line/20 bg-surface shadow-window glass">
+    <div id="term-container" class="h-full w-full"></div>
+  </div>
+</div>
+
+<!-- Floating trigger button -->
+<button
+  type="button"
+  id="term-toggle-btn"
+  class="fixed bottom-4 right-4 z-30 flex items-center gap-2 rounded-full border border-line/15 bg-surface/80 px-3.5 py-2 text-xs font-medium text-fg shadow-lift backdrop-blur-md transition hover:scale-105 hover:bg-surface active:scale-95"
+  title="Buka Terminal (Ctrl+`)"
+>
+  <span class="font-mono text-accent font-bold">&gt;_</span>
+  <span>Terminal</span>
+  <kbd class="kbd ml-0.5 text-[10px]">Ctrl+`</kbd>
+</button>
+
+<script>
+  import { Terminal } from '../scripts/terminal/terminal.js';
+
+  const drawer = document.getElementById('term-drawer') as HTMLElement;
+  const toggleBtn = document.getElementById('term-toggle-btn') as HTMLElement;
+  const container = document.getElementById('term-container') as HTMLElement;
+
+  let terminalInstance: any = null;
+  let isOpen = false;
+
+  function initTerm() {
+    if (!terminalInstance) {
+      const projData = (window as any).__PLAYGROUND_PROJECT__ || null;
+      const vars = (window as any).__PLAYGROUND_VARS__ || {};
+      terminalInstance = new Terminal(container, {
+        project: projData,
+        variables: vars,
+      });
+
+      container.addEventListener('term:close', toggleTerminal);
+      container.addEventListener('term:maximize', () => {
+        drawer.classList.toggle('h-[420px]');
+        drawer.classList.toggle('h-[85vh]');
+      });
+    }
+  }
+
+  function toggleTerminal() {
+    initTerm();
+    isOpen = !isOpen;
+    if (isOpen) {
+      drawer.classList.remove('hidden');
+      terminalInstance.inputEl.focus();
+    } else {
+      drawer.classList.add('hidden');
+    }
+  }
+
+  toggleBtn?.addEventListener('click', toggleTerminal);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === '`' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      toggleTerminal();
+    }
+  });
+
+  // Export helper for playground to notify terminal
+  window.addEventListener('playground:requestsent', ((e: CustomEvent) => {
+    if (terminalInstance) {
+      const { req, res } = e.detail;
+      terminalInstance.echo(`<div><span class="t-dim">[UI Request]</span> <span class="t-acc">${req.method}</span> <span class="text-fg">${req.url}</span></div>`);
+      terminalInstance.renderResponse(req, res);
+    }
+  }) as EventListener);
+</script>
