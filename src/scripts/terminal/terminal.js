@@ -31,9 +31,9 @@ export class Terminal {
       <div class="flex items-center justify-between border-b border-line/10 px-4 py-2 text-xs font-mono select-none">
         <div class="flex items-center gap-2">
           <div class="traffic">
-            <i class="cursor-pointer" data-term-act="close" title="Tutup"></i>
-            <i class="cursor-pointer" data-term-act="min" title="Minimize"></i>
-            <i class="cursor-pointer" data-term-act="max" title="Maximize"></i>
+            <i class="cursor-pointer dot-red" data-term-act="close" title="Tutup"></i>
+            <i class="cursor-pointer dot-yellow" data-term-act="min" title="Minimize"></i>
+            <i class="cursor-pointer dot-green" data-term-act="max" title="Maximize"></i>
           </div>
           <span class="text-muted ml-2">Terminal — <span id="term-pwd">~/</span></span>
         </div>

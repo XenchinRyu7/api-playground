@@ -143,10 +143,11 @@
 
   /* Window chrome */
   .traffic { @apply flex items-center gap-2; }
-  .traffic i { @apply block h-3 w-3 rounded-full; box-shadow: inset 0 0 0 .5px rgb(0 0 0 / .15); }
-  .traffic i:nth-child(1) { background: #ff5f57; }
-  .traffic i:nth-child(2) { background: #febc2e; }
-  .traffic i:nth-child(3) { background: #28c840; }
+  .traffic i, .traffic .dot { @apply block h-3 w-3 rounded-full transition duration-150; box-shadow: inset 0 0 0 .5px rgb(0 0 0 / .2); }
+  .traffic i:hover, .traffic .dot:hover { filter: brightness(0.9); }
+  .traffic .dot-red, .traffic > i:nth-child(1), .traffic > *:nth-child(1) i { background: #ff5f57 !important; }
+  .traffic .dot-yellow, .traffic > i:nth-child(2), .traffic > *:nth-child(2) i { background: #febc2e !important; }
+  .traffic .dot-green, .traffic > i:nth-child(3), .traffic > *:nth-child(3) i { background: #28c840 !important; }
 
   /* Sidebar list */
   .side-item { @apply flex w-full items-center gap-2 rounded-lg px-2 py-[5px] text-left text-[13px] text-fg/90 transition duration-150; }
