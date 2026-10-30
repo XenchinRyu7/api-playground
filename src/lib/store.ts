@@ -51,13 +51,16 @@ const latest = <T extends { uploadedAt: Date; url: string; downloadUrl?: string 
   xs.sort((a, b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt))[0];
 
 const fetchJson = async (b: { url: string; downloadUrl?: string }) => {
-  const targetUrl = b.downloadUrl || b.url;
   const token = getBlobToken();
+  const isPrivate = b.url.includes('.private.blob.');
+  const targetUrl = isPrivate ? b.url : (b.downloadUrl || b.url);
   const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
   const r = await fetch(targetUrl, { headers, cache: 'no-store' });
   if (!r.ok) throw new Error(`Blob ${r.status}`);
   return r.json();
 };
+
+let detectedAccess: 'private' | 'public' | null = null;
 
 const blobStore = {
   async list(): Promise<ProjectMeta[]> {
@@ -65,7 +68,7 @@ const blobStore = {
     const bySlug = new Map<string, typeof blobs>();
     for (const b of blobs) { const s = b.pathname.split('/')[1]; (bySlug.get(s) ?? bySlug.set(s, []).get(s)!).push(b); }
     const metas = await Promise.all([...bySlug.values()].map((xs) => fetchJson(latest(xs)).catch(() => null)));
-    return metas.filter(Boolean);
+    return metas.filter((m): m is ProjectMeta => Boolean(m));
   },
   async get(slug: string): Promise<Project | null> {
     const xs = await listAll(`projects/${slug}/`);
@@ -75,7 +78,7 @@ const blobStore = {
     const token = getBlobToken();
     const { put, del } = await blob();
 
-    const tryPut = async (access: 'public' | 'private') => {
+    const tryPut = async (access: 'private' | 'public') => {
       const opts = {
         access,
         addRandomSuffix: true,
@@ -83,18 +86,28 @@ const blobStore = {
         cacheControlMaxAge: 60,
         ...(token ? { token } : {}),
       };
-      await put(`projects/${p.slug}/data.json`, JSON.stringify(p), opts as any);
-      await put(`meta/${p.slug}/meta.json`, JSON.stringify(toMeta(p)), opts as any);
+      await put(`projects/${p.slug}/data.json`, JSON.stringify(p), opts);
+      await put(`meta/${p.slug}/meta.json`, JSON.stringify(toMeta(p)), opts);
     };
 
     const [old1, old2] = await Promise.all([listAll(`projects/${p.slug}/`), listAll(`meta/${p.slug}/`)]);
+    const sampleUrl = old1[0]?.url || old2[0]?.url;
+    if (!detectedAccess && sampleUrl) {
+      if (sampleUrl.includes('.private.blob.')) detectedAccess = 'private';
+      else if (sampleUrl.includes('.public.blob.')) detectedAccess = 'public';
+    }
+
+    const primaryAccess: 'private' | 'public' = detectedAccess ?? 'private';
+    const fallbackAccess: 'private' | 'public' = primaryAccess === 'private' ? 'public' : 'private';
 
     try {
-      await tryPut('public');
+      await tryPut(primaryAccess);
+      detectedAccess = primaryAccess;
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes('private store') || msg.includes('private access')) {
-        await tryPut('private');
+      const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
+      if (msg.includes('private') || msg.includes('public') || msg.includes('access')) {
+        await tryPut(fallbackAccess);
+        detectedAccess = fallbackAccess;
       } else {
         throw err;
       }
